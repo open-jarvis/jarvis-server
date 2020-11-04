@@ -1,0 +1,64 @@
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Jarvis Server Documentation</title>
+	
+		<link rel="stylesheet" href="main.css">
+	</head>
+	
+	<body>
+		
+		<h1>Jarvis - Server</h1>
+
+		<div id="apidoc">
+			<span>For every request, you have to provide a pre-shared key in the post body: {"psk":"XXXX"} <br> 
+					Requests without the pre-shared keys or with invalid pre-shared keys are automatically cancelled! </span>
+
+			<br><br><br>
+
+			<div id="generate-token">
+				<path> /generate-token <span>GET</span> </path>
+				<header> Generates a token </header>
+				<description> Generates a one-time token for your application. This token is valid for 120 seconds. </description>
+			</div>
+			
+			<div id="register-device">
+				<path> /register-device <span>GET</span> </path>
+				<fields>
+					<field>
+						<property>name</property>
+						<value>Your device name</value>
+					</field>
+					<field>
+						<property>token</property>
+						<value>A previously generated <a href="#generate-token">token</a> (must not be older than 120 seconds) </value>
+					</field>
+					<field>
+						<property>type</property>
+						<value>Your device type (supported values: computer, laptop, tablet or mobile). You can use a custom device type too </value>
+					</field>
+					<field>
+						<property>native</property>
+						<value>If your app is connected through a native app ("true") or a web-app ("false")</value>
+					</field>
+				</fields>
+				<header> Registers a device </header>
+				<description> Registers a device on this server. This device is then allowed to send status updates and infos </description>
+			</div>
+			
+			<div id="unregister-device">
+				<path> /unregister-device <span>GET</span> </path>
+				<fields>
+					<field>
+						<property>token</property>
+						<value>The same token you used to <a href="#register-device">register your device</a> </value>
+					</field>
+				</fields>
+				<header> Unregisters a device </header>
+				<description> Unregisters a device on this server. Use this endpoint only when you don't want your device to share information anymore. <br>
+								Do not use this endpoint, if your device is offline </description>
+			</div>
+		</div>
+	</body>
+</html>

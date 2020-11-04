@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="41px" height="43px" viewBox="0 0 41 43" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 3.7.2 (28276) - http://www.bohemiancoding.com/sketch -->
+    <title>Iron Man Left Arm</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M11.9110611,7.34562715 C11.037993,8.26189553 10.1712306,9.22019263 9.31126551,10.2094693 C0.445133859,20.408787 -4.3410587,30.0387548 5.4313411,38.5337723 C14.5347982,46.4472868 22.4554883,42.0424424 30.6644105,33.1573982 L11.9110611,7.34562715 Z" id="path-1"></path>
+        <mask id="mask-2" maskContentUnits="userSpaceOnUse" maskUnits="objectBoundingBox" x="0" y="0" width="30.6452826" height="35.3113457" fill="white">
+            <use xlink:href="#path-1"></use>
+        </mask>
+        <path d="M28.7533494,35.3802632 L10,9.56849219 C18.1281547,1.03814878 26.802851,-3.84940794 35.6273829,3.82164054 C45.3997827,12.3166581 39.4343646,23.1528012 30.5682329,33.352119 C29.9613263,34.0502852 29.3565597,34.7273699 28.7533494,35.3802632 Z" id="path-3"></path>
+        <mask id="mask-4" maskContentUnits="userSpaceOnUse" maskUnits="objectBoundingBox" x="0" y="0" width="30.6623822" height="35.3802632" fill="white">
+            <use xlink:href="#path-3"></use>
+        </mask>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Suit-Arms" transform="translate(-178.000000, -266.000000)" stroke="#792E0F" stroke-width="8">
+            <g id="Iron-Man-Left-Arm" transform="translate(178.000000, 266.000000)">
+                <use id="Combined-Shape" mask="url(#mask-2)" fill="#EE0C28" xlink:href="#path-1"></use>
+                <use id="Combined-Shape" mask="url(#mask-4)" fill="#F6B649" xlink:href="#path-3"></use>
+            </g>
+        </g>
+    </g>
+</svg>

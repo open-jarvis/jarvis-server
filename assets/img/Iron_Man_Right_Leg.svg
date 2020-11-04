@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="34px" height="54px" viewBox="0 0 34 54" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 3.7.2 (28276) - http://www.bohemiancoding.com/sketch -->
+    <title>Iron Man Right Leg</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M33.8835937,39 C32.8937379,47.4463403 25.7122136,54 17,54 C8.28778643,54 1.10626212,47.4463403 0.116406274,39 L0,39 L0,15 L0.116406274,15 C1.10626212,6.55365974 8.28778643,0 17,0 C25.7122136,0 32.8937379,6.55365974 33.8835937,15 L34,15 L34,39 L33.8835937,39 Z" id="path-1"></path>
+        <mask id="mask-2" maskContentUnits="userSpaceOnUse" maskUnits="objectBoundingBox" x="0" y="0" width="34" height="54" fill="white">
+            <use xlink:href="#path-1"></use>
+        </mask>
+        <path d="M32.9757259,42.5 L33.5,42.5 L26.1530128,28.5 L7.84698719,28.5 L0.5,42.5 L1.02427412,42.5 C1.00816176,42.6655152 1,42.8322215 1,43 C1,47.9705627 8.163444,54 17,54 C25.836556,54 33,47.9705627 33,43 C33,42.8322215 32.9918382,42.6655152 32.9757259,42.5 Z" id="path-3"></path>
+        <mask id="mask-4" maskContentUnits="userSpaceOnUse" maskUnits="objectBoundingBox" x="0" y="0" width="33" height="25.5" fill="white">
+            <use xlink:href="#path-3"></use>
+        </mask>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Suit-Legs" transform="translate(-242.000000, -295.000000)" stroke="#792E0F">
+            <g id="Iron-Man-Right-Leg" transform="translate(259.000000, 322.000000) scale(-1, 1) translate(-259.000000, -322.000000) translate(242.000000, 295.000000)">
+                <use id="Leg" mask="url(#mask-2)" stroke-width="8" fill="#F6B649" xlink:href="#path-1"></use>
+                <use id="Combined-Shape" mask="url(#mask-4)" stroke-width="8" fill="#EE0C28" xlink:href="#path-3"></use>
+                <polyline id="Path-115" stroke-width="2" points="7.53999329 47.4042969 11.8388214 40.1328125 22.4306183 40.1328125 26.2724152 47.3828125"></polyline>
+            </g>
+        </g>
+    </g>
+</svg>

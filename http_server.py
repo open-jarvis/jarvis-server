@@ -8,31 +8,74 @@ import os, sys, json, hashlib
 
 # import script which executes the different api endpoints
 import http_api
+import http_log
+
+logger = http_log.Logger()
+logger.off()
 
 class JarvisWebServer(BaseHTTPRequestHandler):
+	def do_OPTIONS(self):
+		self.send_response(200, "ok")
+		self.send_header('Access-Control-Allow-Origin', '*')
+		self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+		self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Request, X-Requested-With")
+		self.send_header('Content-Length', '0')
+		self.end_headers()
+
+
 	def do_POST(self):
 		path = self.path.split("?")[0]
 		arguments = {k: v[0] for k, v in urlparse.parse_qs(urlparse.urlparse(self.path).query).items()}  
 		body = json.loads(self.rfile.read(int(self.headers.get('Content-Length'))))
 		
+		logger.i("Path", "{}?{}".format(path, "&".join([ a + "=" + b for a, b in arguments.items() ])))
+		logger.i("Body", json.dumps(body))
+
 		psk = None
-		try:
-			psk = body["psk"]
-			hashed_psk = hashlib.sha256(psk.encode('utf-8')).hexdigest()
 
-			f = open(os.path.abspath(os.path.dirname(sys.argv[0])) + "/pre-shared.key", "r")
-			saved_hashed_psk = f.read()
-			f.close()
+		if "psk" in body:
+			try:
+				psk = body["psk"]
+				hashed_psk = hashlib.sha256(psk.encode('utf-8')).hexdigest()
 
-			if hashed_psk == saved_hashed_psk:
-				pass # okay!
-			else:
-				self.wfile.write('{"success":false, "message":"pre-shared key invalid!"}'.encode())
+				f = open(os.path.abspath(os.path.dirname(sys.argv[0])) + "/pre-shared.key", "r")
+				saved_hashed_psk = f.read()
+				f.close()
+
+				if hashed_psk == saved_hashed_psk:
+					pass # okay!
+				else:
+					self.send_response(200)
+					self.send_header('Access-Control-Allow-Origin', "*")
+					self.send_header('Content-Type', "text/json")
+					self.end_headers()
+
+					self.wfile.write('{"success":false, "message":"pre-shared key invalid!"}'.encode())
+					return
+			except Exception as e:
 				return
-		except Exception as e:
-			print(e)
-			self.wfile.write('{"success":false, "message":"no pre-shared key provided!"}'.encode())
-			return
+		elif "token-key" in body:
+			try:
+				key = body["token-key"]
+				hashed_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
+
+				f = open(os.path.abspath(os.path.dirname(sys.argv[0])) + "/token.key", "r")
+				saved_hashed_key = f.read()
+				f.close()
+
+				if hashed_key == saved_hashed_key and path[1:].replace("-", "_") == "generate_token":
+					pass # okay!
+				else:
+					self.send_response(200)
+					self.send_header('Access-Control-Allow-Origin', "*")
+					self.send_header('Content-Type', "text/json")
+					self.end_headers()
+
+					self.wfile.write('{"success":false, "message":"token-key invalid or invalid path!"}'.encode())
+					return
+			except Exception as e:
+				return
+
 
 		try:
 			api_method = getattr(http_api, path[1:].replace("-", "_"))
@@ -44,7 +87,11 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 
 			ip = self.client_address[0]
 
-			self.wfile.write( json.dumps(api_method(ip, arguments)).encode() )
+			str_result = json.dumps(api_method(ip, arguments, body))
+
+			logger.i("Response", str_result)
+
+			self.wfile.write( str_result.encode() )
 		except Exception as e:
 			self.send_response(404)
 			self.send_header('Access-Control-Allow-Origin', "*")
@@ -56,6 +103,7 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 			print("[WEB] Error: {}".format(e))
 			raise e
 
+	### WEB APPEARANCE
 	def do_GET(self):
 		path = self.path.split("?")[0]
 		arguments = {k: v[0] for k, v in urlparse.parse_qs(urlparse.urlparse(self.path).query).items()}  
@@ -82,10 +130,12 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 
 			self.wfile.write(open("assets/not_found.html", "r").read().encode())
 
-			print("[WEB] Error: {}".format(e))
+	### LOGGER
+	def log_message(self, format, *args):
+		return
 
 
-
+### HELPER FUNCTION
 def get_mime_type(filename):
 	mimes = {
 		".123"			: "application/vnd.lotus-1-2-3",

@@ -9,7 +9,18 @@
 	
 	<body>
 		
-		<h1>Jarvis - Server</h1>
+		<h1>Jarvis - API documentation</h1>
+
+		<nav>
+			<h2> Documentation </h2>
+
+			<a href="#generate-token">/generate-token</a>
+			<a href="#register-device">/register-device</a>
+			<a href="#unregister-device">/unregister-device</a>
+			<a href="#set-notifications">/set-notifications</a>
+			<a href="#get-notifications">/get-notifications</a>
+			<a href="#hello">/hello</a>
+		</nav>
 
 		<div id="apidoc">
 			<span>For every request, you have to provide a pre-shared key in the post body: {"psk":"XXXX"} <br> 
@@ -18,14 +29,15 @@
 			<br><br><br>
 
 			<div id="generate-token">
-				<path> /generate-token <span>GET</span> </path>
+				<path> /generate-token </path>
 				<header> Generates a token </header>
 				<description> Generates a one-time token for your application. This token is valid for 120 seconds. </description>
 			</div>
 			
 			<div id="register-device">
-				<path> /register-device <span>GET</span> </path>
+				<path> /register-device </path>
 				<fields>
+					<span>GET Parameters</span>
 					<field>
 						<property>name</property>
 						<value>Your device name</value>
@@ -48,8 +60,9 @@
 			</div>
 			
 			<div id="unregister-device">
-				<path> /unregister-device <span>GET</span> </path>
+				<path> /unregister-device </path>
 				<fields>
+					<span>GET Parameters</span>
 					<field>
 						<property>token</property>
 						<value>The same token you used to <a href="#register-device">register your device</a> </value>
@@ -59,6 +72,88 @@
 				<description> Unregisters a device on this server. Use this endpoint only when you don't want your device to share information anymore. <br>
 								Do not use this endpoint, if your device is offline </description>
 			</div>
-		</div>
+			
+			<div id="set-notifications">
+				<path> /set-notifications </path>
+				<fields>
+					<span>GET Parameters</span>
+					<field>
+						<property>token</property>
+						<value>The same token you used to <a href="#register-device">register your device</a> </value>
+					</field>
+					
+					
+					<span>POST Parameters</span>
+					<field>
+						<property>notifications</property>
+						<value>An array containing <a href="#notification-object">notification objects</a> </value>
+					</field>
+					
+					
+					<span id="notification-object">Notification Object</span>
+					<field>
+						<property>timestamp</property>
+						<value>Timestamp (seconds from unix epoch) </value>
+					</field>
+					<field>
+						<property>sender</property>
+						<value>Sender (application, etc...) </value>
+					</field>
+					<field>
+						<property>title</property>
+						<value>Notification title </value>
+					</field>
+					<field>
+						<property>message</property>
+						<value>Notification message </value>
+					</field>
+					<field>
+						<property>icon</property>
+						<value>Base64 encoded image </value>
+					</field>
+				</fields>
+				<header> Sets notifications </header>
+				<description> set notifications for your device. Notifications will be stored by token, until you update them by calling <a href="#set-notifications">set-notifications</a> again </description>
+			</div>
+
+			<div id="get-notifications">
+				<path> /get-notifications </path>
+				<fields>
+					<span>GET Parameters</span>
+					<field>
+						<property>token</property>
+						<value>(optional) Get notification by a device <a href="#generate-token">token</a> </value>
+					</field>
+				</fields>
+				<header> Get notifications </header>
+				<description> Get notifications by device token or for all devices. <br> If you do not set the token parameter, you'll retrieve all notifications from all devices </description>
+			</div>
+
+			<div id="hello">
+				<path> /hello </path>
+				<fields>
+					<span>GET Parameters</span>
+					<field>
+						<property>token</property>
+						<value>Token of your device </value>
+					</field>
+				</fields>
+				<header> Mark device as online </header>
+				<description> Make sure to send a /hello request every 10-15 seconds. After 20s of inactivity, your device will be marked as offline. </description>
+			</div>
+
+			<div id="am-i-registered">
+				<path> /am-i-registered </path>
+				<fields>
+					<span>GET Parameters</span>
+					<field>
+						<property>token</property>
+						<value>Token of your device </value>
+					</field>
+				</fields>
+				<header> Check if device still exists </header>
+				<description> Use this endpoint, after your application closed and gets reopened. This will check, if your token is still valid, or you'll need to generate a new one! </description>
+			</div>
+		</div>	
 	</body>
 </html>

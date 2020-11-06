@@ -1,18 +1,38 @@
 * {
 	font-family: Apercu;
 	color: #333;
+	box-sizing: content-box;
 }
 
 body, html {
 	background: #F5F8FA;
 	height: 100%;
 	margin: 0;
-	overflow: hidden;
+	overflow: auto;
 	position: relative;
 }
 h1 {
 	margin: 25px auto;
 	text-align: center;
+}
+
+nav {
+	position: fixed;
+	right: 10%;
+	width: 20%;
+	background-color: #fff;
+	border-radius: 5px;
+	padding: 30px;
+	box-sizing: border-box;
+}
+nav > h2 {
+	margin: 0px;
+}
+nav > a {
+	display: block;
+	margin-top: 20px;
+	margin-left: 20px;
+	font-size: 17px;
 }
 
 p.home {
@@ -29,16 +49,16 @@ p.home.top {
 }
 
 #apidoc {
-	width: 80%;
-	margin: 50px auto;
+	width: 50%;
+	margin: 50px 40% 50px 10%;
 }
 #apidoc > div {
-	margin-bottom: 50px;
+	margin-bottom: 100px;
 	display: grid;
 	grid-gap: 20px;
 	grid-template-areas: "path header" "fields description";
-	grid-template-columns: 300px 1fr;
-	grid-template-areas: auto 1fr;
+	grid-template-columns: 350px 1fr;
+	grid-template-rows: auto 1fr;
 }
 #apidoc > div > path,
 #apidoc > div > fields > field > property {
@@ -47,15 +67,6 @@ p.home.top {
 	border-radius: 3px;
 	background-color: #e4e4e4;
 	position: relative;
-}
-#apidoc > div > path > span {
-	position: absolute;
-	right: 4px;
-	top: 4px;
-	padding: 3px;
-	background-color: #fff;
-	border-radius: 3px;
-	font-size: 13px;
 }
 #apidoc > div > header {
 	grid-area: header;
@@ -69,10 +80,18 @@ p.home.top {
 #apidoc > div > fields {
 	grid-area: fields;
 }
+#apidoc > div > fields > span:nth-child(1) {
+	margin-top: 0px;
+}
+#apidoc > div > fields > span {
+	display: block;
+	margin: 30px 0 20px 0;
+	text-decoration: underline;
+}
 #apidoc > div > fields > field {
 	display: grid;
 	grid-template-areas: "property value";
-	grid-template-columns: 75px 1fr;
+	grid-template-columns: 100px 1fr;
 	grid-gap: 10px;
 	margin-bottom: 10px;
 }
@@ -82,6 +101,7 @@ p.home.top {
 }
 #apidoc > div > fields > field > value {
 	grid-area: value;
+	padding-top: 5px;
 }
 
 

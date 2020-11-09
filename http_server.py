@@ -10,6 +10,8 @@ import os, sys, json, hashlib
 import http_api
 import http_log
 
+
+DIRECTORY = os.path.abspath(os.path.dirname(sys.argv[0]))
 logger = http_log.Logger()
 # logger.off()
 
@@ -99,7 +101,7 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 			self.send_header('Content-Type', "text/html; charset=utf-8")
 			self.end_headers()
 
-			self.wfile.write(open("assets/not_found.html", "r").read().encode())
+			self.wfile.write(open(DIRECTORY + "/assets/not_found.html", "r").read().encode())
 
 			print("[WEB] Error: {}".format(e))
 			raise e
@@ -115,21 +117,21 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 			self.send_header('Content-Type', "text/html; charset=utf-8")
 			self.end_headers()
 
-			self.wfile.write(open("assets/index.html", "r").read().encode())
+			self.wfile.write(open(DIRECTORY + "/assets/index.html", "r").read().encode())
 			return
-		elif os.path.isfile("assets/{}".format(path[1:])):
+		elif os.path.isfile(DIRECTORY + "/assets/{}".format(path[1:])):
 			self.send_response(200)
 			self.send_header('Access-Control-Allow-Origin', "*")
 			self.send_header('Content-Type', get_mime_type(path[1:]))
 			self.end_headers()
-			self.wfile.write(open("assets/{}".format(path[1:]), "rb").read())
+			self.wfile.write(open(DIRECTORY + "/assets/{}".format(path[1:]), "rb").read())
 		else:
 			self.send_response(404)
 			self.send_header('Access-Control-Allow-Origin', "*")
 			self.send_header('Content-Type', "text/html; charset=utf-8")
 			self.end_headers()
 
-			self.wfile.write(open("assets/not_found.html", "r").read().encode())
+			self.wfile.write(open(DIRECTORY + "/assets/not_found.html", "r").read().encode())
 
 	### LOGGER
 	def log_message(self, format, *args):

@@ -11,7 +11,7 @@ import http_api
 import http_log
 
 logger = http_log.Logger()
-logger.off()
+# logger.off()
 
 class JarvisWebServer(BaseHTTPRequestHandler):
 	def do_OPTIONS(self):
@@ -29,7 +29,7 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 		body = json.loads(self.rfile.read(int(self.headers.get('Content-Length'))))
 		
 		logger.i("Path", "{}?{}".format(path, "&".join([ a + "=" + b for a, b in arguments.items() ])))
-		logger.i("Body", json.dumps(body))
+		# logger.i("Body", json.dumps(body))
 
 		psk = None
 
@@ -89,7 +89,8 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 
 			str_result = json.dumps(api_method(ip, arguments, body))
 
-			logger.i("Response", str_result)
+			# logger.i("Response", str_result)
+			logger.i("Response", json.loads(str_result)["success"])
 
 			self.wfile.write( str_result.encode() )
 		except Exception as e:

@@ -11,6 +11,7 @@ DIRECTORY = os.path.abspath(os.path.dirname(sys.argv[0])) + "/storage"
 TOKEN_FILE = DIRECTORY + "/tokens.json"
 DEVICE_FILE = DIRECTORY + "/devices.json"
 NOTIFICATION_FILE = DIRECTORY + "/notifications.json"
+LOCATION_FILE = DIRECTORY + "/locations.json"
 
 
 def get_tokens():
@@ -44,6 +45,17 @@ def get_notifications():
 def write_notifications(devices):
 	f = open(NOTIFICATION_FILE, "w")
 	f.write(json.dumps(devices))
+	f.close()
+
+def get_locations():
+	f = open(LOCATION_FILE, "r")
+	tokens = json.loads(f.read())
+	f.close()
+	return tokens
+
+def write_locations(locs):
+	f = open(LOCATION_FILE, "w")
+	f.write(json.dumps(locs))
 	f.close()
 
 
@@ -109,6 +121,9 @@ def remove_device(token):
 
 def set_notifications(device_token, updated_notifications):
 	try:
+		if device_token not in get_devices():
+			return False
+
 		notifications = get_notifications()
 		notifications[device_token] = {"last_update": time.time(), "notifications": updated_notifications}
 		write_notifications(notifications)
@@ -150,3 +165,17 @@ def update_device_status(token, made_hello):
 				return True
 		except Exception as e:
 			return False
+
+def set_location(token, location):
+	try:
+		if device_token not in get_devices():
+			return False
+		
+		locs = get_locations()
+		locs[token] = location
+		write_locations(locs)
+
+		return True
+	except Exception as e:
+		return False
+	

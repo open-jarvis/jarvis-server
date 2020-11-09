@@ -15,11 +15,17 @@
 			<h2> Documentation </h2>
 
 			<a href="#generate-token">/generate-token</a>
+			
 			<a href="#register-device">/register-device</a>
 			<a href="#unregister-device">/unregister-device</a>
+			
 			<a href="#set-notifications">/set-notifications</a>
 			<a href="#get-notifications">/get-notifications</a>
+			
+			<a href="#set-location">/set-location</a>
+			
 			<a href="#hello">/hello</a>
+			<a href="#am-i-registered">/am-i-registered</a>
 		</nav>
 
 		<div id="apidoc">
@@ -127,6 +133,55 @@
 				</fields>
 				<header> Get notifications </header>
 				<description> Get notifications by device token or for all devices. <br> If you do not set the token parameter, you'll retrieve all notifications from all devices </description>
+			</div>
+
+			<div id="set-location">
+				<path> /set-location </path>
+				<fields>
+					<span>GET Parameters</span>
+					<field>
+						<property>token</property>
+						<value>Token of your device </value>
+					</field>
+					
+					<span>POST Parameters</span>
+					<field>
+						<property>location</property>
+						<value>A <a href="#location-object">location object</a> </value>
+					</field>
+					
+					<span id="location-object">Location Object</span>
+					<field>
+						<property>lat</property>
+						<value>Latitude </value>
+					</field>
+					<field>
+						<property>lon</property>
+						<value>Longitude </value>
+					</field>
+					<field>
+						<property>accuracy</property>
+						<value>Radial location accuracy in metres (radius of 68% confidence) </value>
+					</field>
+					<field>
+						<property>provider</property>
+						<value>Name of the location provider </value>
+					</field>
+					<field>
+						<property>altitude</property>
+						<value>Altitude </value>
+					</field>
+					<field>
+						<property>speed</property>
+						<value>Speed in m/s </value>
+					</field>
+					<field>
+						<property>timestamp</property>
+						<value>Timestamp (last updated) </value>
+					</field>
+				</fields>
+				<header> Set device location </header>
+				<description> Sets your devices' location. </description>
 			</div>
 
 			<div id="hello">

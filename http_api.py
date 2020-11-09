@@ -48,6 +48,28 @@ def get_notifications(ip, attrs, post_body):
 	else:
 		return {"success": True, "notifications": Storage.get_all_notifications() }
 
+
+def set_location(ip, attrs, post_body):
+	if "token" not in attrs:
+		return {"success": False, "error": "no token provided!"}
+
+	token = attrs["token"]
+	loc = post_body["location"]
+
+	return {"success": Storage.set_location(token, loc) }
+
+def get_location(ip, attrs, post_body):
+	locs = Storage.get_locations()
+	
+	if "token" in attrs:
+		if attrs["token"] in locs:
+			return {"success": True, "location": locs[attrs["token"]]}
+		else:
+			return {"success": False, "error": "device not found!"}
+	else:
+		return {"success": True, "locations": locs}
+	
+
 def get_devices(ip, attrs, post_body):
 	if "token" in attrs:
 		res = Storage.get_devices()

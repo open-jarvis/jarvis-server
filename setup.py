@@ -24,9 +24,12 @@ def install():
 	ip   =  input("      Static IP : ")
 	mask, gate, dns = ["", "", ""]
 	if ip != "":
-		mask =  input("CIDR Mask [/24] : ")
+		mask =  input(" CIDR Mask [24] : ")
 		gate =  input("     Gateway IP : ")
 		dns  =  input("         DNS IP : ")
+
+		if mask == "":
+			mask = "24"
 
 
 	hashed_psk = hashlib.sha256(psk.encode('utf-8')).hexdigest()
@@ -76,13 +79,15 @@ def install():
 			print("Failed to change static IP, not critical")
 
 	print("Successfully set up Jarvisd in /jarvisd and registered service")
+	print("")
+	print("Please reboot!")
 	exit(0)
 
 
 def is_root():
 	return os.geteuid() == 0
 
-def change_static_ip(interface, ip_address, routers, dns, mask):
+def change_static_ip(interface, ip_address, routers, dns, cidr_mask):
 	conf_file = '/etc/dhcpcd.conf'
 	try:
 		# Sanitize/validate params above

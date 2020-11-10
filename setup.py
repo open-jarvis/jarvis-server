@@ -20,6 +20,14 @@ def install():
 	# ask for keys and store them securely
 	psk = getpass(" Pre-shared key : ")
 	tk =  getpass("      Token key : ")
+	print("I can also set a static IP. If you don't want to set a static IP, just keep the fields blank!")
+	ip   =  input("      Static IP : ")
+	mask, gate, dns = ["", "", ""]
+	if ip != "":
+		mask =  input("CIDR Mask [/24] : ")
+		gate =  input("     Gateway IP : ")
+		dns  =  input("         DNS IP : ")
+
 
 	hashed_psk = hashlib.sha256(psk.encode('utf-8')).hexdigest()
 	f = open(os.path.abspath(os.path.dirname(sys.argv[0])) + "/pre-shared.key", "w")
@@ -62,6 +70,10 @@ def install():
 		exit(1)
 
 
+	# set static ip
+	if ip != "":
+		if not change_static_ip("wlan0", ip, gate, dns, mask):
+			print("Failed to change static IP, not critical")
 
 	print("Successfully set up Jarvisd in /jarvisd and registered service")
 	exit(0)
@@ -69,3 +81,33 @@ def install():
 
 def is_root():
 	return os.geteuid() == 0
+
+def change_static_ip(interface, ip_address, routers, dns, mask):
+	conf_file = '/etc/dhcpcd.conf'
+	try:
+		# Sanitize/validate params above
+		with open(conf_file, 'r') as file:
+			data = file.readlines()
+
+		# Find if config exists
+		ethFound = next((x for x in data if 'interface ' + interface in x), None)
+
+		if ethFound:
+			ethIndex = data.index(ethFound)
+			if data[ethIndex].startswith('#'):
+				data[ethIndex] = data[ethIndex].replace('#', '') # commented out by default, make active
+
+		# If config is found, use index to edit the lines you need ( the next 3)
+		if ethIndex:
+			data[ethIndex+1] = f'static ip_address={ip_address}/{mask}\n'
+			data[ethIndex+2] = f'static routers={routers}\n'
+			data[ethIndex+3] = f'static domain_name_servers={dns}\n'
+
+		with open(conf_file, 'w') as file:
+			file.writelines( data )
+		
+		return True
+	except Exception as ex:
+		return False
+	finally:
+		pass

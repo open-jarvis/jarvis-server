@@ -1,0 +1,16 @@
+[Unit]
+Description=Jarvis daemon
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+ExecStart=/usr/bin/python3.7 /jarvisd/jarvisd.py --use-stored
+StandardOutput=append:/jarvisd/logs/output.log
+StandardError=append:/jarvisd/logs/error.log
+
+[Install]
+WantedBy=multi-user.target

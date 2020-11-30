@@ -12,211 +12,397 @@
 		<h1>Jarvis - API documentation</h1>
 
 		<nav>
-			<h2> Documentation </h2>
+			<h2> HTTP API </h2>
 
-			<a href="#generate-token">/generate-token</a>
-			
-			<br>
-			
+			<a href="#generate-token">/generate-token</a>			
 			<a href="#register-device">/register-device</a>
-			<a href="#unregister-device">/unregister-device</a>
-			
-			<br>
-			
-			<a href="#set-notifications">/set-notifications</a>
-			<a href="#get-notifications">/get-notifications</a>
-			
-			<br>
-			
-			<!-- <a href="#set-location">/set-location</a> -->
-			
-			<br>
-			
+			<a href="#unregister-device">/unregister-device</a>			
+			<a href="#set-property">/set-property</a>
+			<a href="#get-property">/get-property</a>			
 			<a href="#hello">/hello</a>
 			<a href="#am-i-registered">/am-i-registered</a>
+			<a href="#start-debug">/start-debug</a>
+			<a href="#scan-debug">/scan-debug</a>
+			<a href="#end-debug">/end-debug</a>
+
+
+			<h2 class="custom"> InstantDecision API </h2>
+
+			<a href="#id-ask">/id/ask</a>
+			<a href="#id-answer">/id/answer</a>
+			<a href="#id-scan">/id/scan</a>
+			<a href="#id-delete">/id/delete</a>
+
+
+			<h2 class="custom"> Properties </h2>
+
+			<a href="#notifications">notifications</a>
+			<a href="#battery">battery</a>
+
+
+			<h2 class="custom"> InstantDecision Types </h2>
+
+			<a href="#types-call">call</a>
+
+
+			<h2 class="custom"> InstantDecision Objects </h2>
+
+			<a href="#objects-options">options</a>
 		</nav>
 
 		<div id="apidoc">
+			<h2> HTTP API </h2>
 			<span>For every request, you have to provide a pre-shared key in the post body: {"psk":"XXXX"} <br> 
 					Requests without the pre-shared keys or with invalid pre-shared keys are automatically cancelled! </span>
 
-			<br><br><br>
+			<div>
+				<div id="generate-token">
+					<path> /generate-token </path>
+					<header> Generates a token </header>
+					<description> Generates a one-time token for your application. This token is valid for 120 seconds. </description>
+				</div>
+				
+				<div id="register-device">
+					<path> /register-device </path>
+					<fields>
+						<span>GET Parameters</span>
+						<field>
+							<property>name</property>
+							<value>Your device name</value>
+						</field>
+						<field>
+							<property>token</property>
+							<value>A previously generated <a href="#generate-token">token</a> (must not be older than 120 seconds) </value>
+						</field>
+						<field>
+							<property>type</property>
+							<value>Your device type (supported values: computer, laptop, tablet or mobile). You can use a custom device type too </value>
+						</field>
+						<field>
+							<property>native</property>
+							<value>If your app is connected through a native app ("true") or a web-app ("false")</value>
+						</field>
+					</fields>
+					<header> Registers a device </header>
+					<description> Registers a device on this server. This device is then allowed to send status updates and infos </description>
+				</div>
+				
+				<div id="unregister-device">
+					<path> /unregister-device </path>
+					<fields>
+						<span>GET Parameters</span>
+						<field>
+							<property>token</property>
+							<value>The same token you used to <a href="#register-device">register your device</a> </value>
+						</field>
+					</fields>
+					<header> Unregisters a device </header>
+					<description> Unregisters a device on this server. Use this endpoint only when you don't want your device to share information anymore. <br>
+									Do not use this endpoint, if your device is offline </description>
+				</div>
+				
+				<div id="set-property">
+					<path> /set-property </path>
+					<fields>
+						<span>GET Parameters</span>
+						<field>
+							<property>token</property>
+							<value>The same token you used to <a href="#register-device">register your device</a> </value>
+						</field>
 
-			<div id="generate-token">
-				<path> /generate-token </path>
-				<header> Generates a token </header>
-				<description> Generates a one-time token for your application. This token is valid for 120 seconds. </description>
+						<span>POST Parameters</span>
+						<field>
+							<property>property</property>
+							<value>The device property to set </value>	
+						</field>
+						<field>
+							<property>value</property>
+							<value>The device property's value to set </value>	
+						</field>
+					</fields>
+					<header> Set a device property </header>
+					<description> Sets a device property name and value. Recommended properties are notifications, location, battery, etc... <br> value has to be a dictionary (default in get is {} ) </description>
+				</div>
+				
+				<div id="get-property">
+					<path> /get-property </path>
+					<fields>
+						<span>GET Parameters</span>
+						<field>
+							<property>token</property>
+							<value>Your device token </value>
+						</field>
+
+						<span>POST Parameters</span>
+						<field>
+							<property>property</property>
+							<value>The device property to get </value>	
+						</field>
+					</fields>
+					<header> Get a device property </header>
+					<description> Get a device property by name. If no token is set, get property from all devices </description>
+				</div>
+
+				<div id="hello">
+					<path> /hello </path>
+					<fields>
+						<span>GET Parameters</span>
+						<field>
+							<property>token</property>
+							<value>Your device token </value>
+						</field>
+					</fields>
+					<header> Mark device as online </header>
+					<description> Make sure to send a /hello request every 10-15 seconds. After 20s of inactivity, your device will be marked as offline. </description>
+				</div>
+
+				<div id="am-i-registered">
+					<path> /am-i-registered </path>
+					<fields>
+						<span>GET Parameters</span>
+						<field>
+							<property>token</property>
+							<value>Your device token </value>
+						</field>
+					</fields>
+					<header> Check if device still exists </header>
+					<description> Use this endpoint, after your application closed and gets reopened. This will check, if your token is still valid, or you'll need to generate a new one! </description>
+				</div>
+
+				<div id="start-debug">
+					<path> /start-debug </path>
+					<fields>
+						<span>GET Parameters</span>
+						<field>
+							<property>token</property>
+							<value>Your device token</value>
+						</field>
+					</fields>
+					<header> Start a debugging session </header>
+					<description>Starts a debugging session, use the <a href="#scan-debug">/scan-debug</a> endpoint to get new updates</description>
+				</div>
+				
+				<div id="scan-debug">
+					<path> /scan-debug </path>
+					<fields>
+						<span>GET Parameters</span>
+						<field>
+							<property>token</property>
+							<value>Your device token (the token you called <a href="#start-debug">/start-debug</a> with)</value>
+						</field>
+					</fields>
+					<header> Scan for debugging updates </header>
+					<description>Returns all new updates since the last /scan-debug call. <br> You can call this endpoint quite frequently, as it doesn't touches the file system but stores data in RAM (every 0.5s is fine)</description>
+				</div>
+
+				<div id="end-debug">
+					<path> /end-debug </path>
+					<fields>
+						<span>GET Parameters</span>
+						<field>
+							<property>token</property>
+							<value>Your device token</value>
+						</field>
+					</fields>
+					<header> End a debugging session </header>
+					<description>Ends your debugging session and clears all data</description>
+				</div>
+			</div>
+
+			
+
+			<h2> InstantDecision API </h2>
+			<span>The ID API is used to request real-time decisions from other services</span>
+
+			<div>
+				<div id="id-ask">
+					<path> /id/ask </path>
+					<fields>
+						<span>GET Parameters</span>
+						<field>
+							<property>token</property>
+							<value>Your device token</value>
+						</field>
+
+						<span>POST Parameters</span>
+						<field>
+							<property>type</property>
+							<value>Decision <a href="#types">type</a> to make. This is a unique identifier</value>
+						</field>
+						<field>
+							<property>name</property>
+							<value>Display name of the decision to make</value>
+						</field>
+						<field>
+							<property>infos</property>
+							<value>String providing all informations to make this decision.</value>
+						</field>
+						<field>
+							<property>options</property>
+							<value><a href="#objects-options">Options object</a></value>
+						</field>
+					</fields>
+					<header>Ask for a decision</header>
+					<description>Asks for an instant decision of "type" with a display name.</description>
+				</div>
+				
+				<div id="id-answer">
+					<path> /id/answer </path>
+					<fields>
+						<span>GET Parameters</span>
+						<field>
+							<property>token</property>
+							<value>Your device token</value>
+						</field>
+
+						<span>POST Parameters</span>
+						<field>
+							<property>target_token</property>
+							<value>Target device token</value>
+						</field>
+						<field>
+							<property>type</property>
+							<value>Decision <a href="#types">type</a> to make. This is a unique identifier</value>
+						</field>
+						<field>
+							<property>option</property>
+							<value>Index in the <a href="#objects-options">options object</a></value>
+						</field>
+						<field>
+							<property>description</property>
+							<value>(optional) String providing additional information for this decision.</value>
+						</field>
+					</fields>
+					<header>Answer a request</header>
+					<description>Answers a <a href="ask">/aks</a> request. </description>
+				</div>
+
+				<div id="id-scan">
+					<path> /id/scan </path>
+					<fields>
+						<span>GET Parameters</span>
+						<field>
+							<property>token</property>
+							<value>Your device token</value>
+						</field>
+
+						<span>POST Parameters</span>
+						<field>
+							<property>target_token</property>
+							<value>(optional) Target device token</value>
+						</field>
+						<field>
+							<property>type</property>
+							<value>(optional) Scan for a given <a href="#types">type</a></value>
+						</field>
+					</fields>
+					<header>Scan for requests</header>
+					<description>Scan for requests. <br> <br> 
+						If "token" is set, it only scans for requests from the given device token (use this to scan for answers). <br>
+						If "type" is set, only return requests with the given type (use this to scan for ask requests).</description>
+				</div>
+
+				<div id="id-delete">
+					<path> /id/delete </path>
+					<fields>
+						<span>GET Parameters</span>
+						<field>
+							<property>token</property>
+							<value>Your device token</value>
+						</field>
+
+						<span>POST Parameters</span>
+						<field>
+							<property>target_token</property>
+							<value>Target device token</value>
+						</field>
+						<field>
+							<property>type</property>
+							<value>The type to delete</value>
+						</field>
+					</fields>
+					<header>Delete a decision</header>
+					<description>Deletes a decision. Call this API endpoint either if the decision wasn't anwered on time or got answered and you don't need the decision storage anymore</description>
+				</div>
 			</div>
 			
-			<div id="register-device">
-				<path> /register-device </path>
-				<fields>
-					<span>GET Parameters</span>
-					<field>
-						<property>name</property>
-						<value>Your device name</value>
-					</field>
-					<field>
-						<property>token</property>
-						<value>A previously generated <a href="#generate-token">token</a> (must not be older than 120 seconds) </value>
-					</field>
-					<field>
-						<property>type</property>
-						<value>Your device type (supported values: computer, laptop, tablet or mobile). You can use a custom device type too </value>
-					</field>
-					<field>
-						<property>native</property>
-						<value>If your app is connected through a native app ("true") or a web-app ("false")</value>
-					</field>
-				</fields>
-				<header> Registers a device </header>
-				<description> Registers a device on this server. This device is then allowed to send status updates and infos </description>
+
+
+			<h2> Properties </h2>
+			<span>Properties for the <a href="#get-property">/get-property</a> and <a href="#set-property">/set-property</a> requests</span>
+
+			<div>
+
 			</div>
 			
-			<div id="unregister-device">
-				<path> /unregister-device </path>
-				<fields>
-					<span>GET Parameters</span>
-					<field>
-						<property>token</property>
-						<value>The same token you used to <a href="#register-device">register your device</a> </value>
-					</field>
-				</fields>
-				<header> Unregisters a device </header>
-				<description> Unregisters a device on this server. Use this endpoint only when you don't want your device to share information anymore. <br>
-								Do not use this endpoint, if your device is offline </description>
+
+			<h2 id="types">InstantDecision Types</h2>
+			<span>Here are some (the types are fully customizable and don't have to meet this standard) types you can use and are already implemented: </span>
+
+			<div>
+				<div id="types-call">
+					<path>call</path>
+					<header>A call that needs to be answered/rejected</header>
+				</div>
 			</div>
+
+
 			
-			<div id="set-notifications">
-				<path> /set-notifications </path>
-				<fields>
-					<span>GET Parameters</span>
-					<field>
-						<property>token</property>
-						<value>The same token you used to <a href="#register-device">register your device</a> </value>
-					</field>
-					
-					
-					<span>POST Parameters</span>
-					<field>
-						<property>notifications</property>
-						<value>An array containing <a href="#notification-object">notification objects</a> </value>
-					</field>
-					
-					
-					<span id="notification-object">Notification Object</span>
-					<field>
-						<property>timestamp</property>
-						<value>Timestamp (seconds from unix epoch) </value>
-					</field>
-					<field>
-						<property>sender</property>
-						<value>Sender (application, etc...) </value>
-					</field>
-					<field>
-						<property>title</property>
-						<value>Notification title </value>
-					</field>
-					<field>
-						<property>message</property>
-						<value>Notification message </value>
-					</field>
-					<field>
-						<property>icon</property>
-						<value>Base64 encoded image </value>
-					</field>
-				</fields>
-				<header> Sets notifications </header>
-				<description> set notifications for your device. Notifications will be stored by token, until you update them by calling <a href="#set-notifications">set-notifications</a> again </description>
+			<h2 id="objects">InstantDecision Objects</h2>
+			<span>Objects for <a href="#ask">/ask</a> requests</span>
+			
+			<div>
+				<div id="objects-options">
+					<path> Options </path>
+					<fields>
+						<span>Array of the following objects</span>
+						<field>
+							<property>text</property>
+							<value>(optional) Text to show for this option</value>
+						</field>
+						<field>
+							<property>color</property>
+							<value>(optional) Hex code of a color (eg. #ffffff or #000)</value>
+						</field>
+						<field>
+							<property>icon</property>
+							<value>(optional) A base64 representation of an icon</value>
+						</field>
+					</fields>
+					<header>Options </header>
+					<description class="code">
+						<code>[
+	{
+		"text": "Accept",
+		"color": "#0aa61f",
+		"icon": "dGVzdA=="
+	},
+	{
+		"icon": "dGVzdDM="
+	},
+	{
+		"text": "Reject",
+		"icon": "dGVzdDI="
+	}
+]</code>
+					</description>
+				</div>
 			</div>
 
-			<div id="get-notifications">
-				<path> /get-notifications </path>
-				<fields>
-					<span>GET Parameters</span>
-					<field>
-						<property>token</property>
-						<value>(optional) Get notification by a device <a href="#generate-token">token</a> </value>
-					</field>
-				</fields>
-				<header> Get notifications </header>
-				<description> Get notifications by device token or for all devices. <br> If you do not set the token parameter, you'll retrieve all notifications from all devices </description>
-			</div>
+		</div>
 
-			<!-- <div id="set-location">
-				<path> /set-location </path>
-				<fields>
-					<span>GET Parameters</span>
-					<field>
-						<property>token</property>
-						<value>Token of your device </value>
-					</field>
-					
-					<span>POST Parameters</span>
-					<field>
-						<property>location</property>
-						<value>A <a href="#location-object">location object</a> </value>
-					</field>
-					
-					<span id="location-object">Location Object</span>
-					<field>
-						<property>lat</property>
-						<value>Latitude </value>
-					</field>
-					<field>
-						<property>lon</property>
-						<value>Longitude </value>
-					</field>
-					<field>
-						<property>accuracy</property>
-						<value>Radial location accuracy in metres (radius of 68% confidence) </value>
-					</field>
-					<field>
-						<property>provider</property>
-						<value>Name of the location provider </value>
-					</field>
-					<field>
-						<property>altitude</property>
-						<value>Altitude </value>
-					</field>
-					<field>
-						<property>speed</property>
-						<value>Speed in m/s </value>
-					</field>
-					<field>
-						<property>timestamp</property>
-						<value>Timestamp (last updated) </value>
-					</field>
-				</fields>
-				<header> Set device location </header>
-				<description> Sets your devices' location. </description>
-			</div> -->
-
-			<div id="hello">
-				<path> /hello </path>
-				<fields>
-					<span>GET Parameters</span>
-					<field>
-						<property>token</property>
-						<value>Token of your device </value>
-					</field>
-				</fields>
-				<header> Mark device as online </header>
-				<description> Make sure to send a /hello request every 10-15 seconds. After 20s of inactivity, your device will be marked as offline. </description>
-			</div>
-
-			<div id="am-i-registered">
-				<path> /am-i-registered </path>
-				<fields>
-					<span>GET Parameters</span>
-					<field>
-						<property>token</property>
-						<value>Token of your device </value>
-					</field>
-				</fields>
-				<header> Check if device still exists </header>
-				<description> Use this endpoint, after your application closed and gets reopened. This will check, if your token is still valid, or you'll need to generate a new one! </description>
-			</div>
-		</div>	
+		<script>
+		document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+			anchor.addEventListener('click', function (e) {
+				e.preventDefault();
+		
+				document.querySelector(this.getAttribute('href')).scrollIntoView({
+					behavior: "smooth",
+					inline: "center",
+					block: "center"
+				});
+			});
+		});
+		</script>
 	</body>
 </html>

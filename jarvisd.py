@@ -18,10 +18,10 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 # import custom http server to handle incoming web requests
 from http_server import JarvisWebServer
 import device_service
-import setup
 
 if "--install" in sys.argv:
-	setup.install()
+	import system.setup
+	system.setup.install()
 
 
 USAGE = "\nUsage: python3 jarvisd.py --pre-shared-key <psk> --token-key <tokenkey>"

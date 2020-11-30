@@ -1,0 +1,1 @@
+/usr/bin/python3 /jarvisd/system/jarvisd_manager.py $@

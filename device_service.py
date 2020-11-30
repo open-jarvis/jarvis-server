@@ -2,7 +2,7 @@
 # Copyright (c) 2020 by Philipp Scheer. All Rights Reserved.
 #
 
-import time
+import time, traceback
 import storage as Storage
 
 # inactivity scan

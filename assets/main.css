@@ -13,13 +13,13 @@ body, html {
 }
 h1 {
 	margin: 25px auto;
-	text-align: center;
+	padding-left: 30%;
 }
 
 nav {
 	position: fixed;
-	right: 10%;
-	width: 20%;
+	left: 2.5%;
+	width: 25%;
 	background-color: #fff;
 	border-radius: 5px;
 	padding: 30px;
@@ -27,12 +27,40 @@ nav {
 }
 nav > h2 {
 	margin: 0px;
+	margin-bottom: 7px;
 }
 nav > a {
 	display: block;
+	font-size: 16px;
+	position: relative;
+	transition: .1s;
+	text-decoration: none;
+	margin: 2px 0;
+}
+nav > a::before {
+	content: "\2192";
+	opacity: 0;
+	transform: translateX(-10px);
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	margin: auto;
+	transition: .1s;
+	font-weight: bold;
+}
+nav > a:hover {
+	transform: translateX(20px);
+}
+nav > a:hover::before {
+	opacity: 1;
+	transform: translateX(-20px);
+}
+nav > h2.custom {
 	margin-top: 20px;
-	margin-left: 20px;
-	font-size: 17px;
+	border: 2px solid #F5F8FA;
+	border-style: solid none none none;
+	padding-top: 15px;
 }
 
 p.home {
@@ -49,10 +77,13 @@ p.home.top {
 }
 
 #apidoc {
-	width: 50%;
-	margin: 50px 40% 50px 10%;
+	width: 60%;
+	margin: 50px 10% 50px 30%;
 }
 #apidoc > div {
+	margin: 30px 0 150px;
+}
+#apidoc > div > div {
 	margin-bottom: 100px;
 	display: grid;
 	grid-gap: 20px;
@@ -60,51 +91,58 @@ p.home.top {
 	grid-template-columns: 350px 1fr;
 	grid-template-rows: auto 1fr;
 }
-#apidoc > div > path,
-#apidoc > div > fields > field > property {
+#apidoc > div > div > path,
+#apidoc > div > div > fields > field > property {
 	grid-area: path;
 	padding: 5px;
 	border-radius: 3px;
 	background-color: #e4e4e4;
 	position: relative;
 }
-#apidoc > div > header {
+#apidoc > div > div > header {
 	grid-area: header;
 	display: flex;
 	align-items: center;
 	font-size: 20px;
 }
-#apidoc > div > description {
+#apidoc > div > div > description {
 	grid-area: description;
 }
-#apidoc > div > fields {
+#apidoc > div > div > fields {
 	grid-area: fields;
 }
-#apidoc > div > fields > span:nth-child(1) {
+#apidoc > div > div > fields > span:nth-child(1) {
 	margin-top: 0px;
 }
-#apidoc > div > fields > span {
+#apidoc > div > div > fields > span {
 	display: block;
 	margin: 30px 0 20px 0;
 	text-decoration: underline;
 }
-#apidoc > div > fields > field {
+#apidoc > div > div > fields > field {
 	display: grid;
 	grid-template-areas: "property value";
 	grid-template-columns: 100px 1fr;
 	grid-gap: 10px;
 	margin-bottom: 10px;
 }
-#apidoc > div > fields > field > property {
+#apidoc > div > div > fields > field > property {
 	grid-area: property;
 	height: 20px;
 }
-#apidoc > div > fields > field > value {
+#apidoc > div > div > fields > field > value {
 	grid-area: value;
 	padding-top: 5px;
 }
 
-
+description.code {
+	background-color: #fff;
+	padding: 15px 20px;
+	border-radius: 5px;
+}
+code {
+	white-space: pre-wrap;
+}
 
 
 /* NOT RELEVANT */

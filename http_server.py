@@ -4,7 +4,7 @@
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import urllib.parse as urlparse
-import os, sys, json, hashlib
+import os, sys, json, hashlib, time
 
 # import script which executes the different api endpoints
 import http_api
@@ -12,7 +12,7 @@ import http_log
 
 
 DIRECTORY = os.path.abspath(os.path.dirname(sys.argv[0]))
-logger = http_log.Logger()
+logger = http_log.Logger(DIRECTORY + "/logs/jarvis_http.log", DIRECTORY + "/logs")
 # logger.off()
 
 class JarvisWebServer(BaseHTTPRequestHandler):
@@ -29,9 +29,10 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 		path = self.path.split("?")[0]
 		arguments = {k: v[0] for k, v in urlparse.parse_qs(urlparse.urlparse(self.path).query).items()}  
 		body = json.loads(self.rfile.read(int(self.headers.get('Content-Length'))))
-		
+
+		logger.new_group({"timestamp": time.time(), "ip": self.client_address[0], "token": arguments["token"] if "token" in arguments else False})
 		logger.i("Path", "{}?{}".format(path, "&".join([ a + "=" + b for a, b in arguments.items() ])))
-		# logger.i("Body", json.dumps(body))
+		logger.i("Body", json.dumps(body))
 
 		psk = None
 
@@ -40,7 +41,7 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 				psk = body["psk"]
 				hashed_psk = hashlib.sha256(psk.encode('utf-8')).hexdigest()
 
-				f = open(os.path.abspath(os.path.dirname(sys.argv[0])) + "/pre-shared.key", "r")
+				f = open(DIRECTORY + "/pre-shared.key", "r")
 				saved_hashed_psk = f.read()
 				f.close()
 
@@ -53,6 +54,7 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 					self.end_headers()
 
 					self.wfile.write('{"success":false, "message":"pre-shared key invalid!"}'.encode())
+					logger.i("Response", '{"success":false, "message":"pre-shared key invalid!"}')
 					return
 			except Exception as e:
 				return
@@ -61,7 +63,7 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 				key = body["token-key"]
 				hashed_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
 
-				f = open(os.path.abspath(os.path.dirname(sys.argv[0])) + "/token.key", "r")
+				f = open(DIRECTORY + "/token.key", "r")
 				saved_hashed_key = f.read()
 				f.close()
 
@@ -74,13 +76,14 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 					self.end_headers()
 
 					self.wfile.write('{"success":false, "message":"token-key invalid or invalid path!"}'.encode())
+					logger.i("Response", '{"success":false, "message":"token-key invalid or invalid path!"}')
 					return
 			except Exception as e:
 				return
 
 
 		try:
-			api_method = getattr(http_api, path[1:].replace("-", "_"))
+			api_method = getattr(http_api, path[1:].replace("-", "_").replace("/", "__"))
 
 			self.send_response(200)
 			self.send_header('Access-Control-Allow-Origin', "*")
@@ -89,10 +92,9 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 
 			ip = self.client_address[0]
 
-			str_result = json.dumps(api_method(ip, arguments, body))
+			str_result = json.dumps(api_method(ip, arguments, body, logger))
 
-			# logger.i("Response", str_result)
-			logger.i("Response", json.loads(str_result)["success"])
+			logger.i("Response", str_result)
 
 			self.wfile.write( str_result.encode() )
 		except Exception as e:

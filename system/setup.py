@@ -30,6 +30,9 @@ def install():
 
 		if mask == "":
 			mask = "24"
+		
+		if not change_static_ip("wlan0", ip, gate, dns, mask):
+			print("Failed to change static IP, not critical")
 
 
 	hashed_psk = hashlib.sha256(psk.encode('utf-8')).hexdigest()
@@ -44,11 +47,11 @@ def install():
 
 
 	if not os.path.exists("/jarvisd"):
-   		os.mkdir("/jarvisd")
+		os.mkdir("/jarvisd")
 	if not os.path.exists("/jarvisd/apps"):
-   		os.mkdir("/jarvisd/apps")
+		os.mkdir("/jarvisd/apps")
 		do_action("apply permissions", "sudo chmod 777 /jarvisd/apps")
-	
+
 	do_action("move jarvisd to new location (/jarvisd)", "sudo mv -v * /jarvisd")
 	do_action("install service file", "sudo cp -v /jarvisd/system/jarvisd.service /etc/systemd/system/jarvisd.service")
 	do_action("install jarvisd executable", "sudo cp -v /jarvisd/system/jarvisd /usr/bin/jarvisd")
@@ -57,11 +60,6 @@ def install():
 	do_action("start jarvisd service", "sudo systemctl start jarvisd.service")
 	do_action("enable jarvisd service", "sudo systemctl enable jarvisd.service")
 
-
-	# set static ip
-	if ip != "":
-		if not change_static_ip("wlan0", ip, gate, dns, mask):
-			print("Failed to change static IP, not critical")
 
 	print("Successfully set up Jarvisd in /jarvisd and registered service")
 	print("")
@@ -95,6 +93,7 @@ def change_static_ip(interface, ip_address, routers, dns, cidr_mask):
 
 		# Find if config exists
 		ethFound = next((x for x in data if 'interface ' + interface in x), None)
+		ethIndex = None
 
 		if ethFound:
 			ethIndex = data.index(ethFound)
@@ -103,15 +102,20 @@ def change_static_ip(interface, ip_address, routers, dns, cidr_mask):
 
 		# If config is found, use index to edit the lines you need ( the next 3)
 		if ethIndex:
-			data[ethIndex+1] = f'static ip_address={ip_address}/{mask}\n'
+			data[ethIndex+1] = f'static ip_address={ip_address}/{cidr_mask}\n'
 			data[ethIndex+2] = f'static routers={routers}\n'
 			data[ethIndex+3] = f'static domain_name_servers={dns}\n'
 
-		with open(conf_file, 'w') as file:
-			file.writelines( data )
-		
+			with open(conf_file, 'w') as file:
+				file.writelines( data )
+		else:
+			with open(conf_file, 'a') as file:
+				file.write("\ninterface {}\nstatic ip_address={}/{}\nstatic routers={}\nstatic domain_name_servers={}\n".format(interface, ip_address, cidr_mask, routers, dns))
+
 		return True
 	except Exception as ex:
+		print("Static IP Error: {}".format(ex))
+		raise ex
 		return False
 	finally:
 		pass

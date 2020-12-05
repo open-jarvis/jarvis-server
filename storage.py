@@ -17,14 +17,13 @@ last_instant_read = 0
 last_instant_contents = ""
 
 def readf(f):
-	f = open(f, "r")
-	res = json.loads(f.read())
-	f.close()
+	res = {}
+	with open(f, "r") as fl:
+		res = json.loads(fl.read())
 	return res
 def writef(f,c):
-	f = open(f, "w")
-	f.write(c)
-	f.close()
+	with open(f, "w") as fl:
+		fl.write(c)
 
 def get_tokens():
 	return readf(TOKEN_FILE)
@@ -45,8 +44,8 @@ def write_tokens(tokens):
 	writef(TOKEN_FILE, json.dumps(tokens))
 def write_devices(devices):
 	writef(DEVICE_FILE, json.dumps(devices))
-def write_properties(devices):
-	writef(STORAGE_FILE, json.dumps(devices))
+def write_properties(props):
+	writef(STORAGE_FILE, json.dumps(props))
 def write_instants(instants):
 	writef(INSTANT_FILE, json.dumps(instants))
 
@@ -54,43 +53,62 @@ def write_instants(instants):
 
 
 
-def add_token(tk):
+def add_token(tk, permission_level):
 	try:
 		tokens = get_tokens()
-
 		invalid_tokens = []
 
 		for token in tokens:
-			if tokens[token] < time.time():
+			if tokens[token]["valid_until"] < time.time():
 				invalid_tokens.append(token)
 		
 		for t in invalid_tokens:
 			del tokens[t]
 
-		tokens[tk] = time.time() + EXPIRES_IN
+		valid_until = time.time() + EXPIRES_IN
+		tokens[tk] = {"valid_until": valid_until, "permission_level":permission_level}
 		write_tokens(tokens)
 		return True
 	except Exception as e:
+		# raise e
 		return False
 
 def is_valid(tk):
 	tokens = get_tokens()
+	invalid_tokens = []
+	valid = True
+	made_changes = False
+
 	try:
-		if tokens[tk] < time.time():
-			del tokens[tk]
+		for token in tokens:
+			if tokens[token]["valid_until"] < time.time():
+				if token == tk:
+					valid = False
+				invalid_tokens.append(token)
+		
+		for t in invalid_tokens:
+			del tokens[t]
+			made_changes = True
+
+		if made_changes:
 			write_tokens(tokens)
-			return False
-		else:
-			return True
+
+		return valid
 	except Exception as e:
 		return False
 
 
 
-def add_device(ip, name, token, app_or_web, connection):
+def get_permission_level_for_token(tk):
+	try:
+		return get_tokens()[tk]["permission_level"]
+	except Exception as e:
+		return False
+
+def add_device(ip, name, token, app_or_web, connection, permission_level):
 	try:
 		devices = get_devices()
-		devices[token] = { "ip":ip, "name":name, "type": app_or_web, "connection":connection, "status":"green", "last-active": time.time() }
+		devices[token] = { "ip":ip, "name":name, "type": app_or_web, "connection":connection, "status":"green", "last-active": time.time(), "permission-level": permission_level }
 		write_devices(devices)
 
 		tokens = get_tokens()

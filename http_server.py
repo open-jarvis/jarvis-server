@@ -13,6 +13,7 @@ import http_log
 
 DIRECTORY = os.path.abspath(os.path.dirname(sys.argv[0]))
 logger = http_log.Logger(DIRECTORY + "/logs/jarvis_http.log", DIRECTORY + "/logs")
+logger.console_on()
 # logger.off()
 
 class JarvisWebServer(BaseHTTPRequestHandler):
@@ -34,8 +35,12 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 		logger.i("Path", "{}?{}".format(path, "&".join([ a + "=" + b for a, b in arguments.items() ])))
 		logger.i("Body", json.dumps(body))
 
-		psk = None
 
+		## check if special api call
+		psk = None
+		if body == None:
+			self._send_404()
+			return
 		if "psk" in body:
 			try:
 				psk = body["psk"]
@@ -45,19 +50,13 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 				saved_hashed_psk = f.read()
 				f.close()
 
-				if hashed_psk == saved_hashed_psk:
-					pass # okay!
-				else:
-					self.send_response(200)
-					self.send_header('Access-Control-Allow-Origin', "*")
-					self.send_header('Content-Type', "text/json")
-					self.end_headers()
-
+				if hashed_psk != saved_hashed_psk:
+					self._send_headers(content_type="application/json")
 					self.wfile.write('{"success":false, "message":"pre-shared key invalid!"}'.encode())
 					logger.i("Response", '{"success":false, "message":"pre-shared key invalid!"}')
 					return
 			except Exception as e:
-				return
+				self._send_404(e)
 		elif "token-key" in body:
 			try:
 				key = body["token-key"]
@@ -67,47 +66,33 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 				saved_hashed_key = f.read()
 				f.close()
 
-				if hashed_key == saved_hashed_key and path[1:].replace("-", "_") == "generate_token":
-					pass # okay!
-				else:
-					self.send_response(200)
-					self.send_header('Access-Control-Allow-Origin', "*")
-					self.send_header('Content-Type', "text/json")
-					self.end_headers()
-
+				if hashed_key != saved_hashed_key or path[1:].replace("-", "_") != "generate_token":
+					self._send_headers(content_type="application/json")
 					self.wfile.write('{"success":false, "message":"token-key invalid or invalid path!"}'.encode())
 					logger.i("Response", '{"success":false, "message":"token-key invalid or invalid path!"}')
 					return
 			except Exception as e:
-				return
-
+				self._send_404(e)
 
 		try:
 			api_method = getattr(http_api, path[1:].replace("-", "_").replace("/", "__"))
 
-			self.send_response(200)
-			self.send_header('Access-Control-Allow-Origin', "*")
-			self.send_header('Content-Type', "text/json")
-			self.end_headers()
-
 			ip = self.client_address[0]
 
-			str_result = json.dumps(api_method(ip, arguments, body, logger))
 
+			## TODO: CHECK FOR PERMISSIONS
+
+
+			str_result = json.dumps(api_method(ip, arguments, body, logger))
 			logger.i("Response", str_result)
 
+			self._send_headers(content_type="application/json")
 			self.wfile.write( str_result.encode() )
 		except Exception as e:
-			self.send_response(404)
-			self.send_header('Access-Control-Allow-Origin', "*")
-			self.send_header('Content-Type', "text/html; charset=utf-8")
-			self.end_headers()
+			self._send_404(e)
 
-			self.wfile.write(open(DIRECTORY + "/assets/not_found.html", "r").read().encode())
 
-			print("[WEB] Error: {}".format(e))
-			raise e
-
+	
 	### WEB APPEARANCE
 	def do_GET(self):
 		path = self.path.split("?")[0]
@@ -134,6 +119,24 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 			self.end_headers()
 
 			self.wfile.write(open(DIRECTORY + "/assets/not_found.html", "r").read().encode())
+
+	### SEND HEADERS
+	def _send_headers(self, code=200, content_type="text/html; charset=utf-8", allow_origin="*"):
+		self.send_response(code)
+		self.send_header('Access-Control-Allow-Origin', allow_origin)
+		self.send_header('Content-Type', content_type)
+		self.end_headers()
+
+	def _send_404(self, error=None):
+		self._send_headers(404)
+		self.wfile.write(open(DIRECTORY + "/assets/not_found.html", "r").read().encode())
+
+		logger.i("Response", "404 page")
+
+		if error != None:
+			logger.e("Error", str(e))
+			raise error
+
 
 	### LOGGER
 	def log_message(self, format, *args):

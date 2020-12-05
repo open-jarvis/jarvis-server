@@ -64,8 +64,11 @@ if not "--use-stored" in sys.argv:
 
 # runs server
 def startServer():
-	server = HTTPServer(('', 2021), JarvisWebServer)
-	server.serve_forever()
+	try:
+		server = HTTPServer(('', 2021), JarvisWebServer)
+		server.serve_forever()
+	except Exception as e:
+		raise e
 
 
 # starts the http server

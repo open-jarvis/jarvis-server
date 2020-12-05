@@ -3,6 +3,14 @@
 	color: #333;
 	box-sizing: content-box;
 }
+:root {
+	--red: #ff3f3f;
+	--green: #1dc558;
+	--blue: #3f65ff;
+	--orange: #ff9b3f;
+	--light-grey: #ebebeb;
+	--border-radius: 5px;
+}
 
 body, html {
 	background: #F5F8FA;
@@ -16,12 +24,15 @@ h1 {
 	padding-left: 30%;
 }
 
-nav {
+nav, #permissions {
 	position: fixed;
-	left: 2.5%;
+	left: 2.5vh;
+	top: 2.5vh;
+	height: 95vh;
 	width: 25%;
 	background-color: #fff;
-	border-radius: 5px;
+	border-radius: var(--border-radius);
+	border: 2px solid var(--light-grey);
 	padding: 30px;
 	box-sizing: border-box;
 }
@@ -29,13 +40,27 @@ nav > h2 {
 	margin: 0px;
 	margin-bottom: 7px;
 }
+nav > span, path > span, #permissions span {
+	display: inline;
+    position: absolute;
+    left: 30px;
+    background-color: #000;
+    color: #fff;
+    width: 20px;
+    text-align: center;
+    border-radius: var(--border-radius);
+}
+span.red { background-color: var(--red) !important; 	}
+span.grn { background-color: var(--green) !important; 	}
+span.blu { background-color: var(--blue) !important; 	}
+span.org { background-color: var(--orange) !important;	}
 nav > a {
 	display: block;
 	font-size: 16px;
 	position: relative;
 	transition: .1s;
 	text-decoration: none;
-	margin: 2px 0;
+	margin: 5px 0 5px 30px;
 }
 nav > a::before {
 	content: "\2192";
@@ -63,6 +88,32 @@ nav > h2.custom {
 	padding-top: 15px;
 }
 
+
+
+div#permissions {
+	position: fixed;
+	right: 2.5vh;
+	bottom: unset;
+	height: auto;
+	left: unset;
+	width: 17%;
+	background-color: #fff;
+	border: 2px solid var(--light-grey);
+	border-radius: var(--border-radius);
+}
+div#permissions > div {
+	margin: 5px 0;
+}
+div#permissions desc {
+	margin-left: 30px;
+}
+div#permissions desc > span {
+	position: unset;
+	display: inline-block;
+}
+
+
+
 p.home {
 	position: fixed;
 	left: 0;
@@ -76,9 +127,12 @@ p.home.top {
 	bottom: 75px;
 }
 
+
+
+
 #apidoc {
-	width: 60%;
-	margin: 50px 10% 50px 30%;
+	width: 50%;
+	margin: 50px 20% 50px 30%;
 }
 #apidoc > div {
 	margin: 30px 0 150px;
@@ -91,11 +145,17 @@ p.home.top {
 	grid-template-columns: 350px 1fr;
 	grid-template-rows: auto 1fr;
 }
+#apidoc > div > div > path {
+	padding-left: 35px !important;
+}
+#apidoc > div > div > path > span {
+	left: 5px;
+}
 #apidoc > div > div > path,
 #apidoc > div > div > fields > field > property {
 	grid-area: path;
 	padding: 5px;
-	border-radius: 3px;
+	border-radius: var(--border-radius);
 	background-color: #e4e4e4;
 	position: relative;
 }
@@ -135,10 +195,12 @@ p.home.top {
 	padding-top: 5px;
 }
 
+
+
 description.code {
 	background-color: #fff;
 	padding: 15px 20px;
-	border-radius: 5px;
+	border-radius: var(--border-radius);
 }
 code {
 	white-space: pre-wrap;

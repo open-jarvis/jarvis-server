@@ -9,8 +9,10 @@ import storage as Storage
 ## HTTP API
 
 def generate_token(ip, attrs, post_body, logger):
+	if not "permission-level" in post_body or int(post_body["permission-level"]) > 4 or int(post_body["permission-level"]) < 1:
+		return {"success":False, "error":"POST permission level either not set or invalid (range 1-4)"}
 	new_token = ''.join(random.choice("abcdef0123456789") for _ in range(8))
-	b = Storage.add_token(new_token)
+	b = Storage.add_token(new_token, int(post_body["permission-level"]))
 	if b:
 		return {"success":b, "token": new_token}
 	else:
@@ -23,7 +25,7 @@ def register_device(ip, attrs, post_body, logger):
 	con_type = "app" if (attrs["native"] == "true") else "web"
 
 	if Storage.is_valid(passed_token):
-		return {"success": Storage.add_device(ip, name, passed_token, dev_type, con_type) }
+		return {"success": Storage.add_device(ip, name, passed_token, dev_type, con_type, Storage.get_permission_level_for_token(passed_token)) }
 	else:
 		return {"success": False, "error": "token is not valid!"}
 
@@ -52,10 +54,10 @@ def get_property(ip, attrs, post_body, logger):
 
 
 def get_devices(ip, attrs, post_body, logger):
-	if "token" in attrs:
+	if "target_token" in post_body:
 		res = Storage.get_devices()
-		if attrs["token"] in res:
-			return {"success":True, "device": res[attrs["token"]]}
+		if post_body["token"] in res:
+			return {"success":True, "device": res[post_body["target_token"]]}
 		else:
 			return {"success":False, "error": "device not found"}
 	else:

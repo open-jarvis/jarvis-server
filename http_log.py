@@ -12,13 +12,18 @@ class Logger:
 		self.on = True
 		self.fast = False
 		self.grouping = False
+		self.to_console = False
 		self.fast_log_data = []
 
 	def off(self):
 		self.on = False
-
 	def on(self):
 		self.on = True
+
+	def console_on(self):
+		self.to_console = True
+	def console_off(self):
+		self.to_console = False
 
 	def new_group(self, data):
 		self.grouping = True
@@ -26,28 +31,22 @@ class Logger:
 
 	def i(self, tag, message):
 		self.wr("I", tag, message)
-	
 	def e(self, tag, message):
 		self.wr("E", tag, message)
-	
 	def w(self, tag, message):
 		self.wr("W", tag, message)
-	
 	def s(self, tag, message):
 		self.wr("S", tag, message)
 
 	def enable_fast(self):
 		self.fast = True
 		self.clear_fast()
-
 	def disable_fast(self):
 		self.fast = False
 		self.clear_fast()
-	
 	def clear_fast(self):
 		del self.fast_log_data
 		self.fast_log_data = []
-
 	def get_fast(self):
 		return self.fast_log_data
 
@@ -81,8 +80,13 @@ class Logger:
 		if not self.on:
 			return
 		
+		logstr = "{} {}/{}{} {}".format(str(datetime.now()), pre, tag, " " * (10-len(tag)), message)
+
+		if self.to_console:
+			print(logstr)
+
 		with open(self.logfile, "a+") as f:
-			f.write("{} {}/{}{} {}\n".format(str(datetime.now()), pre, tag, " " * (10-len(tag)), message))
+			f.write(logstr + "\n")
 		self.check_file_size()
 	
 	def check_file_size(self):

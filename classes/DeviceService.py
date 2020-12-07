@@ -3,7 +3,7 @@
 #
 
 import time, traceback
-import storage as Storage
+import classes.Storage as Storage
 
 # inactivity scan
 def inactivity_scan():

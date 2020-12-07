@@ -9,7 +9,7 @@
 	
 	<body>
 		
-		<h1>Jarvis - API documentation</h1>
+		<h1>Jarvis - Complete API documentation</h1>
 
 		<nav>
 			<h2> HTTP API </h2>
@@ -49,6 +49,10 @@
 			<h2 class="custom"> InstantDecision Objects </h2>
 
 			<a href="#objects-options">options</a>
+
+
+			<!-- <h2 class="custom"> Application API </h2>
+			<a href="#app-"></a> -->
 		</nav>
 
 		<div id="permissions">
@@ -111,10 +115,10 @@
 				<div id="unregister-device">
 					<path><span class="blk">5</span> /unregister-device </path>
 					<fields>
-						<span>GET Parameters</span>
+						<span>POST Parameters</span>
 						<field>
 							<property>token</property>
-							<value>The same token you used to <a href="#register-device">register your device</a> </value>
+							<value>The device/application token you want to unregister</value>
 						</field>
 					</fields>
 					<header> Unregisters a device </header>
@@ -134,7 +138,11 @@
 						<span>POST Parameters</span>
 						<field>
 							<property>target_token</property>
-							<value>Get information only for device with the given target_token </value>
+							<value>(optional) Get information only for device with the given target_token </value>
+						</field>
+						<field>
+							<property>token-key</property>
+							<value>(optional) for the jarvis-web admin dashboard: when the token-key is set, you can bypass the GET token parameter because the web app doesn't have an application/device token </value>
 						</field>
 					</fields>
 					<header> Get devices </header>

@@ -24,6 +24,27 @@ h1 {
 	padding-left: 30%;
 }
 
+::-webkit-scrollbar {
+	width: 14px;
+	height: 18px;
+}
+::-webkit-scrollbar-thumb {
+	height: 6px;
+	border: 4px solid rgba(0, 0, 0, 0);
+	background-clip: padding-box;
+	-webkit-border-radius: 7px;
+	background-color: rgba(0, 0, 0, 0.15);
+}
+::-webkit-scrollbar-button {
+	width: 0;
+	height: 0;
+	display: none;
+}
+::-webkit-scrollbar-corner {
+	background-color: transparent;
+}
+
+
 nav, #permissions {
 	position: fixed;
 	left: 2.5vh;
@@ -35,6 +56,7 @@ nav, #permissions {
 	border: 2px solid var(--light-grey);
 	padding: 30px;
 	box-sizing: border-box;
+	overflow: auto;
 }
 nav > h2 {
 	margin: 0px;
@@ -42,13 +64,13 @@ nav > h2 {
 }
 nav > span, path > span, #permissions span {
 	display: inline;
-    position: absolute;
-    left: 30px;
-    background-color: #000;
-    color: #fff;
-    width: 20px;
-    text-align: center;
-    border-radius: var(--border-radius);
+	position: absolute;
+	left: 30px;
+	background-color: #000;
+	color: #fff;
+	width: 20px;
+	text-align: center;
+	border-radius: var(--border-radius);
 }
 span.red { background-color: var(--red) !important; 	}
 span.grn { background-color: var(--green) !important; 	}

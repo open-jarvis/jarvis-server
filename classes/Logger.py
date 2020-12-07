@@ -1,3 +1,7 @@
+#
+# Copyright (c) 2020 by Philipp Scheer. All Rights Reserved.
+#
+
 from datetime import datetime
 import os, zipfile, json
 
@@ -6,7 +10,7 @@ MAX_LOGF_SIZE = 20 * 1024 * 1024		# 20MB
 MAX_FAST_LENGTH = 1000					# 1000 entries
 
 class Logger:
-	def __init__(self, logfile="logs/requests.log", compressed_folder="logs"):
+	def __init__(self, logfile, compressed_folder):
 		self.logfile = logfile
 		self.compressed_folder = compressed_folder
 		self.on = True
@@ -37,6 +41,9 @@ class Logger:
 		self.wr("W", tag, message)
 	def s(self, tag, message):
 		self.wr("S", tag, message)
+	def c(self, tag, message):
+		self.wr("C", tag, message)
+
 
 	def enable_fast(self):
 		self.fast = True

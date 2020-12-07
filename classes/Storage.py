@@ -4,6 +4,7 @@
 
 
 import random, json, time, os, sys
+import classes.Permissions as Permissions
 
 
 EXPIRES_IN = 120	# seconds
@@ -13,12 +14,24 @@ DEVICE_FILE = DIRECTORY + "/devices.json"
 STORAGE_FILE = DIRECTORY + "/brain.json"
 INSTANT_FILE = DIRECTORY + "/instants.json"
 
+MASTER_TOKEN = Permissions.get_mastertoken()
+
+READS = {
+	TOKEN_FILE:0,
+	DEVICE_FILE:0,
+	STORAGE_FILE:0,
+	INSTANT_FILE:0
+}
+
 last_instant_read = 0
 last_instant_contents = ""
 
 def readf(f):
+	global READS
 	res = {}
 	with open(f, "r") as fl:
+		if f in READS:
+			READS[f] += 1
 		res = json.loads(fl.read())
 	return res
 def writef(f,c):
@@ -66,7 +79,7 @@ def add_token(tk, permission_level):
 			del tokens[t]
 
 		valid_until = time.time() + EXPIRES_IN
-		tokens[tk] = {"valid_until": valid_until, "permission_level":permission_level}
+		tokens[tk] = {"valid_until": valid_until, "permission-level":permission_level}
 		write_tokens(tokens)
 		return True
 	except Exception as e:
@@ -100,10 +113,21 @@ def is_valid(tk):
 
 
 def get_permission_level_for_token(tk):
+	if tk == MASTER_TOKEN:
+		return 5
 	try:
-		return get_tokens()[tk]["permission_level"]
+		# check if not registered yet
+		_get_tokens = get_tokens()
+		if tk in _get_tokens:
+			return _get_tokens[tk]["permission-level"]
+		
+		# check if already registered
+		_get_devices = get_devices()
+		if tk in _get_devices:
+			return _get_devices[tk]["permission-level"]
 	except Exception as e:
-		return False
+		return 0
+	return 0
 
 def add_device(ip, name, token, app_or_web, connection, permission_level):
 	try:
@@ -172,13 +196,11 @@ def set_property(token, key, value):
 		return True
 	except Exception as e:
 		return False
-
 def get_property(token, key):
 	try:
 		return get_properties()[token][key]
 	except Exception as e:
 		return {}
-
 def get_all_properties(key):
 	try:
 		res = {}
@@ -197,7 +219,6 @@ def instant_ask(token, typ, name, infos, options):
 	instants[token].append({"answered":False, "answer": { "token": "", "description": "", "option": {} }, "timestamp":int(time.time()), "type": typ, "name":name, "infos":infos, "options":options})
 
 	write_instants(instants)
-
 def instant_scan(token=False, tpe=False):
 	instants = get_instants()
 
@@ -221,7 +242,6 @@ def instant_scan(token=False, tpe=False):
 		raise e
 
 	return instants
-
 def instant_answer(token, sourcetoken, typ, option_index, description):
 	instants = get_instants()
 
@@ -240,7 +260,6 @@ def instant_answer(token, sourcetoken, typ, option_index, description):
 	
 	if write:
 		write_instants(instants)
-
 def instant_delete(token, typ):
 	instants = get_instants()
 	to_del = -1

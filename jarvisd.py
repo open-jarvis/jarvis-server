@@ -16,8 +16,8 @@ import multiprocessing, time, sys, os, hashlib
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 # import custom http server to handle incoming web requests
-from http_server import JarvisWebServer
-import device_service
+import classes.BackendServer as BackendServer
+import classes.DeviceService as DeviceService
 
 if "--install" in sys.argv:
 	import system.setup
@@ -65,7 +65,7 @@ if not "--use-stored" in sys.argv:
 # runs server
 def startServer():
 	try:
-		server = HTTPServer(('', 2021), JarvisWebServer)
+		server = HTTPServer(('', 2021), BackendServer.JarvisWebServer)
 		server.serve_forever()
 	except Exception as e:
 		raise e
@@ -76,7 +76,7 @@ server_process = multiprocessing.Process(target=startServer)
 server_process.start()
 
 # starts the device inactivity check
-device_inactivity_scan = multiprocessing.Process(target=device_service.inactivity_scan)
+device_inactivity_scan = multiprocessing.Process(target=DeviceService.inactivity_scan)
 device_inactivity_scan.start()
 
 

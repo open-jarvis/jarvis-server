@@ -12,20 +12,22 @@
 #	--pre-shared-key <pre-shared-key>  Sets a pre-shared key for future requests
 
 
-import multiprocessing, time, sys, os, hashlib
-from http.server import BaseHTTPRequestHandler, HTTPServer
-
-# import custom http server to handle incoming web requests
-import classes.BackendServer as BackendServer
-import classes.DeviceService as DeviceService
+import sys
 
 if "--install" in sys.argv:
 	import system.setup
 	system.setup.install()
+	exit(0)
+
+
+# import custom http server to handle incoming web requests
+import multiprocessing, time, os, hashlib
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import classes.BackendServer as BackendServer
+import classes.DeviceService as DeviceService
 
 
 USAGE = "\nUsage: python3 jarvisd.py --pre-shared-key <psk> --token-key <tokenkey>"
-
 
 if not "--use-stored" in sys.argv:
 	psk = None

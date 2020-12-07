@@ -4,13 +4,32 @@
 
 import sys, os, hashlib
 from getpass import getpass
+import classes.Colors as C
 
+
+LOC = "/jarvisd"
+APP_LOC = f"{LOC}/apps"
+USR = os.getlogin()
 
 def install():
+	global LOC,APP_LOC,USR
+
 	# check if sudo
 	if not is_root():
 		print("Must be root to install")
 		exit(1)
+	
+
+	# get install location
+	if input(f"Jarvis is going to be installed at {C.GREEN}{LOC}{C.END} . Is this okay? [y] ") not in ["y", "Y", "z", "Z", "", "\n"]:
+		LOC = input("Enter a new installation location (absolute path): ")
+		APP_LOC = f'{LOC}/apps'
+
+
+	# check original user
+	if input(f"Is your login user {C.GREEN}{USR}{C.END}? [y] ") not in ["y", "Y", "z", "Z", "", "\n"]:
+		USR = input("Enter your login user: ")
+
 	
 	# check if service file exists
 	if not os.path.isfile(os.path.abspath(os.path.dirname(sys.argv[0])) + "/system/jarvisd.service"):
@@ -46,22 +65,23 @@ def install():
 	f.close()
 
 
-	if not os.path.exists("/jarvisd"):
-		os.mkdir("/jarvisd")
-	if not os.path.exists("/jarvisd/apps"):
-		os.mkdir("/jarvisd/apps")
-		do_action("apply permissions", "sudo chmod 777 /jarvisd/apps")
+	if not os.path.exists(LOC):
+		os.mkdir(LOC)
+	if not os.path.exists(APP_LOC):
+		os.mkdir(APP_LOC)
+		do_action("apply permissions", f"sudo chmod 755 {APP_LOC}")
 
-	do_action("move jarvisd to new location (/jarvisd)", "sudo mv -v * /jarvisd")
-	do_action("install service file", "sudo cp -v /jarvisd/system/jarvisd.service /etc/systemd/system/jarvisd.service")
-	do_action("install jarvisd executable", "sudo cp -v /jarvisd/system/jarvisd /usr/bin/jarvisd")
-	do_action("change jarvisd executable permissions", "sudo chmod 777 /usr/bin/jarvisd")
-	do_action("reload systemd daemon", "sudo systemctl daemon-reload")
-	do_action("start jarvisd service", "sudo systemctl start jarvisd.service")
-	do_action("enable jarvisd service", "sudo systemctl enable jarvisd.service")
+	do_action(f"move jarvisd to new location ({LOC})", 		f"sudo mv -v * {LOC}")
+	do_action("install service file", 						f"sudo cp -v {LOC}/system/jarvisd.service /etc/systemd/system/jarvisd.service")
+	do_action("install jarvisd executable", 				f"sudo cp -v {LOC}/system/jarvisd /usr/bin/jarvisd")
+	do_action("change jarvisd executable permissions", 		"sudo chmod 777 /usr/bin/jarvisd")
+	do_action("reload systemd daemon", 						"sudo systemctl daemon-reload")
+	do_action("start jarvisd service", 						"sudo systemctl start jarvisd.service")
+	do_action("enable jarvisd service", 					"sudo systemctl enable jarvisd.service")
+	do_action(f"change ownership of directory (to {USR})",	f"sudo chown -R {USR}: {LOC}")
 
 
-	print("Successfully set up Jarvisd in /jarvisd and registered service")
+	print(f"Successfully set up Jarvisd in {LOC} and registered service")
 	print("")
 	print("Please reboot!")
 	exit(0)

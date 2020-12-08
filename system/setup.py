@@ -18,7 +18,7 @@ def install():
 	if not is_root():
 		print("Must be root to install")
 		exit(1)
-	
+
 
 	# get install location
 	if input(f"Jarvis is going to be installed at {C.GREEN}{LOC}{C.END} . Is this okay? [y] ") not in ["y", "Y", "z", "Z", "", "\n"]:
@@ -30,7 +30,7 @@ def install():
 	if input(f"Is your login user {C.GREEN}{USR}{C.END}? [y] ") not in ["y", "Y", "z", "Z", "", "\n"]:
 		USR = input("Enter your login user: ")
 
-	
+
 	# check if service file exists
 	if not os.path.isfile(os.path.abspath(os.path.dirname(sys.argv[0])) + "/system/jarvisd.service"):
 		print("Service file not found")
@@ -52,6 +52,7 @@ def install():
 		
 		if not change_static_ip("wlan0", ip, gate, dns, mask):
 			print("Failed to change static IP, not critical")
+	do_action("changing hostname to jarvis", "sudo hostname jarvis")
 
 
 	hashed_psk = hashlib.sha256(psk.encode('utf-8')).hexdigest()

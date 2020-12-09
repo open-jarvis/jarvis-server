@@ -129,21 +129,21 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 			self.send_header('Content-Type', "text/html; charset=utf-8")
 			self.end_headers()
 
-			self.wfile.write(open(DIRECTORY + "/assets/index.html", "r").read().encode())
+			self.wfile.write(open(DIRECTORY + "/apidoc/index.html", "r").read().encode())
 			return
-		elif os.path.isfile(DIRECTORY + "/assets/{}".format(path[1:])):
+		elif os.path.isfile(DIRECTORY + "/apidoc/{}".format(path[1:])):
 			self.send_response(200)
 			self.send_header('Access-Control-Allow-Origin', "*")
 			self.send_header('Content-Type', get_mime_type(path[1:]))
 			self.end_headers()
-			self.wfile.write(open(DIRECTORY + "/assets/{}".format(path[1:]), "rb").read())
+			self.wfile.write(open(DIRECTORY + "/apidoc/{}".format(path[1:]), "rb").read())
 		else:
 			self.send_response(404)
 			self.send_header('Access-Control-Allow-Origin', "*")
 			self.send_header('Content-Type', "text/html; charset=utf-8")
 			self.end_headers()
 
-			self.wfile.write(open(DIRECTORY + "/assets/not_found.html", "r").read().encode())
+			self.wfile.write(open(DIRECTORY + "/apidoc/not_found.html", "r").read().encode())
 
 
 	### SEND HEADERS/PRESET MESSAGES
@@ -154,7 +154,7 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 		self.end_headers()
 	def _send_404(self, error=None):
 		self._send_headers(404)
-		self.wfile.write(open(DIRECTORY + "/assets/not_found.html", "r").read().encode())
+		self.wfile.write(open(DIRECTORY + "/apidoc/not_found.html", "r").read().encode())
 
 		logger.i("Response", "404 page")
 
@@ -163,7 +163,7 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 			raise error
 	def _send_500(self, error=None):
 		self._send_headers(500)
-		self.wfile.write(open(DIRECTORY + "/assets/internal_error.html", "r").read().encode())
+		self.wfile.write(open(DIRECTORY + "/apidoc/internal_error.html", "r").read().encode())
 		
 		logger.i("Response", "500 page")
 

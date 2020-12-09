@@ -80,6 +80,7 @@ def install():
 	do_action("start jarvisd service", 						"sudo systemctl start jarvisd.service")
 	do_action("enable jarvisd service", 					"sudo systemctl enable jarvisd.service")
 	do_action(f"change ownership of directory (to {USR})",	f"sudo chown -R {USR}: {LOC}")
+	do_action(f"copy api documentation to {LOC}/apidoc",	f"git clone https://github.com/open-jarvis/open-jarvis.github.io {LOC}/apidoc")
 
 
 	print(f"Successfully set up Jarvisd in {LOC} and registered service")

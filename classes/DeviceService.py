@@ -6,7 +6,7 @@ import time, traceback
 import classes.Storage as Storage
 
 # inactivity scan
-def inactivity_scan():
+def inactivity_scan(root_dir):
 	while True:
 		try:
 			devices = Storage.get_devices()

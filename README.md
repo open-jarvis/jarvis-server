@@ -6,8 +6,7 @@ Jarvis backend and which handles incoming data from mobile phones and smart devi
 ## Installation
 ```bash
 git clone https://github.com/open-jarvis/jarvis-server
-cd jarvis-service
-python3 jarvisd.py --install
+sudo python3 jarvis-server/setup.py
 # launch installer script
 # and follow the instructions
 ```

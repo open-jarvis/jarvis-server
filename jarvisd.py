@@ -14,12 +14,6 @@
 
 import sys, os
 
-if "--install" in sys.argv:
-	import system.setup
-	system.setup.install()
-	exit(0)
-
-
 # import custom http server to handle incoming web requests
 import multiprocessing, time, os, hashlib, traceback, signal
 from http.server import BaseHTTPRequestHandler, HTTPServer

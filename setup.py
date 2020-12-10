@@ -4,31 +4,38 @@
 
 import sys, os, hashlib
 from getpass import getpass
-import classes.Colors as C
+import classes.Colors as Colors
 
 
-LOC = "/jarvisd"
+ROOT_DIR = "/jarvis"
+LOC = f"{ROOT_DIR}/server"
 APP_LOC = f"{LOC}/apps"
 USR = os.getlogin()
+DIR = os.path.dirname(os.path.abspath(__file__))
 
 def install():
-	global LOC,APP_LOC,USR
+	global ROOT_DIR,LOC,APP_LOC,USR,DIR
 
-	# check if sudo
+	# see if root
 	if not is_root():
-		print("Must be root to install")
+		print("You need to be root!")
 		exit(1)
 
 
-	# get install location
-	if input(f"Jarvis is going to be installed at {C.GREEN}{LOC}{C.END} . Is this okay? [y] ") not in ["y", "Y", "z", "Z", "", "\n"]:
-		LOC = input("Enter a new installation location (absolute path): ")
-		APP_LOC = f'{LOC}/apps'
+	# check for installation directory
+	if input(f"The default Jarvis installation directory is {Colors.BLUE}{ROOT_DIR}{Colors.END}. Is this okay? [y] ") not in ["y", "Y", "z", "Z", "", "\n"]:
+		ROOT_DIR = input("Enter a new installation directory (absolute path): ")
+		LOC = f"{ROOT_DIR}/server"
+		APP_LOC = f"{LOC}/apps"
+
+	# check for user
+	if input(f"Your linux username is {Colors.BLUE}{USR}{Colors.END}. Is this correct? [y] ") not in ["y", "Y", "z", "Z", "", "\n"]:
+		USR = input("Enter your linux username: ")
 
 
-	# check original user
-	if input(f"Is your login user {C.GREEN}{USR}{C.END}? [y] ") not in ["y", "Y", "z", "Z", "", "\n"]:
-		USR = input("Enter your login user: ")
+	# create directories
+	if not os.path.isdir(APP_LOC):
+		os.makedirs(APP_LOC)
 
 
 	# check if service file exists
@@ -52,7 +59,6 @@ def install():
 		
 		if not change_static_ip("wlan0", ip, gate, dns, mask):
 			print("Failed to change static IP, not critical")
-	do_action("changing hostname to jarvis", "sudo hostname jarvis")
 
 
 	hashed_psk = hashlib.sha256(psk.encode('utf-8')).hexdigest()
@@ -66,22 +72,18 @@ def install():
 	f.close()
 
 
-	if not os.path.exists(LOC):
-		os.mkdir(LOC)
-	if not os.path.exists(APP_LOC):
-		os.mkdir(APP_LOC)
-		do_action("apply permissions", f"sudo chmod 755 {APP_LOC}")
-
-	do_action(f"move jarvisd to new location ({LOC})", 		f"sudo mv -v * {LOC}")
+	do_action("install packages", 							 "sudo apt install -y git")
+	do_action("change application folder permissions",		f"sudo chmod 755 {APP_LOC}")
+	do_action(f"move jarvisd to new location ({LOC})", 		f"sudo mv -v {DIR}/* {LOC}")
 	do_action("install service file", 						f"sudo cp -v {LOC}/system/jarvisd.service /etc/systemd/system/jarvisd.service")
 	do_action("install jarvisd executable", 				f"sudo cp -v {LOC}/system/jarvisd /usr/bin/jarvisd")
-	do_action("change jarvisd executable permissions", 		"sudo chmod 777 /usr/bin/jarvisd")
-	do_action("reload systemd daemon", 						"sudo systemctl daemon-reload")
-	do_action("start jarvisd service", 						"sudo systemctl start jarvisd.service")
-	do_action("enable jarvisd service", 					"sudo systemctl enable jarvisd.service")
+	do_action("change jarvisd executable permissions", 		 "sudo chmod 777 /usr/bin/jarvisd")
+	do_action("reload systemd daemon", 						 "sudo systemctl daemon-reload")
+	do_action("start jarvisd service", 						 "sudo systemctl start jarvisd.service")
+	do_action("enable jarvisd service", 					 "sudo systemctl enable jarvisd.service")
 	do_action(f"change ownership of directory (to {USR})",	f"sudo chown -R {USR}: {LOC}")
 	do_action(f"copy api documentation to {LOC}/apidoc",	f"git clone https://github.com/open-jarvis/open-jarvis.github.io {LOC}/apidoc")
-
+	do_action("clean up directory",							f"sudo rm -rf {DIR}")
 
 	print(f"Successfully set up Jarvisd in {LOC} and registered service")
 	print("")
@@ -91,7 +93,6 @@ def install():
 
 def is_root():
 	return os.geteuid() == 0
-
 def do_action(print_str, shell_command, show_output=True, on_fail="failed!", on_success="done!", exit_on_fail=True):
 	print(print_str + "... ", end="")
 
@@ -104,8 +105,6 @@ def do_action(print_str, shell_command, show_output=True, on_fail="failed!", on_
 			exit(1)
 	else:
 		print(on_success)
-
-
 def change_static_ip(interface, ip_address, routers, dns, cidr_mask):
 	conf_file = '/etc/dhcpcd.conf'
 	try:
@@ -141,3 +140,6 @@ def change_static_ip(interface, ip_address, routers, dns, cidr_mask):
 		return False
 	finally:
 		pass
+
+
+install()

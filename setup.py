@@ -9,7 +9,7 @@ import classes.Colors as Colors
 
 ROOT_DIR = "/jarvis"
 LOC = f"{ROOT_DIR}/server"
-APP_LOC = f"{LOC}/apps"
+APP_LOC = f"{ROOT_DIR}/apps"
 USR = os.getlogin()
 DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -26,7 +26,7 @@ def install():
 	if input(f"The default Jarvis installation directory is {Colors.BLUE}{ROOT_DIR}{Colors.END}. Is this okay? [y] ") not in ["y", "Y", "z", "Z", "", "\n"]:
 		ROOT_DIR = input("Enter a new installation directory (absolute path): ")
 		LOC = f"{ROOT_DIR}/server"
-		APP_LOC = f"{LOC}/apps"
+		APP_LOC = f"{ROOT_DIR}/apps"
 
 	# check for user
 	if input(f"Your linux username is {Colors.BLUE}{USR}{Colors.END}. Is this correct? [y] ") not in ["y", "Y", "z", "Z", "", "\n"]:
@@ -34,6 +34,8 @@ def install():
 
 
 	# create directories
+	if not os.path.isdir(LOC):
+		os.makedirs(LOC)
 	if not os.path.isdir(APP_LOC):
 		os.makedirs(APP_LOC)
 

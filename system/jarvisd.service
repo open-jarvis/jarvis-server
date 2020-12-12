@@ -8,9 +8,9 @@ Type=simple
 Restart=always
 RestartSec=1
 User=root
-ExecStart=/usr/bin/python3.7 /jarvisd/jarvisd.py --use-stored
-StandardOutput=append:/jarvisd/logs/output.log
-StandardError=append:/jarvisd/logs/error.log
+ExecStart=/usr/bin/python3 {{SRV_DIR}}/jarvisd.py --use-stored
+StandardOutput=append:{{SRV_DIR}}/logs/output.log
+StandardError=append:{{SRV_DIR}}/logs/error.log
 
 [Install]
 WantedBy=multi-user.target

@@ -5,6 +5,7 @@
 
 import random, json, time, os, sys
 import classes.Permissions as Permissions
+from filelock import FileLock
 
 
 EXPIRES_IN = 120	# seconds
@@ -28,15 +29,18 @@ last_instant_contents = ""
 
 def readf(f):
 	global READS
+	print(f"read file {f}")
 	res = {}
 	with open(f, "r") as fl:
 		if f in READS:
 			READS[f] += 1
-		res = json.loads(fl.read())
-	return res
+		res = fl.read()
+	return json.loads(res)
 def writef(f,c):
-	with open(f, "w") as fl:
-		fl.write(c)
+	print(f"write file {f} -> {c}")
+	lock = FileLock(f"{f}.lock")
+	with lock:
+		open(f, "w").write(c)
 
 def get_tokens():
 	return readf(TOKEN_FILE)

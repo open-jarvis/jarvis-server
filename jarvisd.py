@@ -20,7 +20,8 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import classes.BackendServer as BackendServer
 import classes.DeviceService as DeviceService
 import classes.AppLoader as AppLoader
-from classes.Logger import Logger
+import classes.MQTTLogger as MQTTLogger
+from jarvis import Logger
 
 
 DIR = os.path.dirname(os.path.realpath(__file__))
@@ -93,7 +94,7 @@ def stop_all_processes(loggr):
 	global PROCESSES, logger
 	for p in PROCESSES:
 		terminate_process(p, p.name, logging_instance=logger)
-def on_SIGTERM():
+def on_SIGTERM(a,b):
 	logger.e("Signal", "caught SIGTERM, stopping all subprocesses")
 	stop_all_processes()
 	exit(0)
@@ -108,6 +109,7 @@ logger.console_on()
 register_process(start_server, "server")							# launch http server and api
 register_process(AppLoader.load_apps, "app loader")					# launch app loader service
 register_process(DeviceService.inactivity_scan, "inactivity scan")	# launch inactivity scan
+register_process(MQTTLogger.start_logging, "mqtt sniffer")			# launch inactivity scan
 
 
 # handle system signals

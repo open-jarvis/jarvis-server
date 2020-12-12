@@ -10,9 +10,10 @@ import os, sys, json, hashlib, time
 
 
 # import script which executes the different api endpoints
+# from jarvis import Logger
+from jarvis import Logger
 import classes.API as API
 import classes.Permissions as Permissions
-from classes.Logger import Logger
 
 
 # initiate the logger
@@ -23,7 +24,7 @@ logger.console_on()
 
 # read the hashed keys from disk
 HASHED_PRE_SHARED_KEY = None 
-HASHED_TOKEN_KEY = None 
+HASHED_TOKEN_KEY = None
 with open(DIRECTORY + "/pre-shared.key", "r") as f:
 	HASHED_PRE_SHARED_KEY = f.read()
 with open(DIRECTORY + "/token.key", "r") as f:

@@ -21,6 +21,7 @@ import classes.BackendServer as BackendServer
 import classes.DeviceService as DeviceService
 import classes.AppLoader as AppLoader
 import classes.MQTTLogger as MQTTLogger
+import classes.MQTTServer as MQTTServer
 from jarvis import Logger
 
 
@@ -53,15 +54,10 @@ if not "--use-stored" in sys.argv:
 		exit(1)
 
 
-	hashed_psk = hashlib.sha256(psk.encode('utf-8')).hexdigest()
-	f = open(os.path.abspath(os.path.dirname(sys.argv[0])) + "/pre-shared.key", "w")
-	f.write(hashed_psk)
-	f.close()
-
-	hashed_token_key = hashlib.sha256(token_key.encode('utf-8')).hexdigest()
-	f = open(os.path.abspath(os.path.dirname(sys.argv[0])) + "/token.key", "w")
-	f.write(hashed_token_key)
-	f.close()
+	with open(f"{DIR}/pre-shared.key", "w") as f:
+		f.write(hashlib.sha256(psk.encode('utf-8')).hexdigest())
+	with open(f"{DIR}/token.key", "w") as f:
+		f.write(hashlib.sha256(token_key.encode('utf-8')).hexdigest())
 
 
 # runs server
@@ -106,10 +102,11 @@ logger.console_on()
 
 
 # start services
-register_process(start_server, "server")							# launch http server and api
+register_process(start_server, "http api server")					# launch http server and api
+register_process(MQTTServer.start_server, "mqtt api server")		# launch mqtt api server
 register_process(AppLoader.load_apps, "app loader")					# launch app loader service
 register_process(DeviceService.inactivity_scan, "inactivity scan")	# launch inactivity scan
-register_process(MQTTLogger.start_logging, "mqtt sniffer")			# launch inactivity scan
+register_process(MQTTLogger.start_logging, "mqtt sniffer")			# launch mqtt sniffer and logger
 
 
 # handle system signals

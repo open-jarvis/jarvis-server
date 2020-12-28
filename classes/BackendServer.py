@@ -22,14 +22,6 @@ logger = Logger(DIRECTORY + "/logs/jarvis_http.log", DIRECTORY + "/logs")
 logger.console_on()
 
 
-# read the hashed keys from disk
-HASHED_PRE_SHARED_KEY = None 
-HASHED_TOKEN_KEY = None
-with open(DIRECTORY + "/pre-shared.key", "r") as f:
-	HASHED_PRE_SHARED_KEY = f.read()
-with open(DIRECTORY + "/token.key", "r") as f:
-	HASHED_TOKEN_KEY = f.read()
-
 
 # http handler class
 class JarvisWebServer(BaseHTTPRequestHandler):
@@ -73,14 +65,14 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 			psk = body["psk"]
 			hashed_psk = hashlib.sha256(psk.encode('utf-8')).hexdigest()
 
-			if hashed_psk != HASHED_PRE_SHARED_KEY:
+			if hashed_psk != Permissions.PRE_SHARED_KEY:
 				self._send_auth_invalid()
 				return
 		if "token-key" in body:
 			key = body["token-key"]
 			hashed_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
 
-			if hashed_key != HASHED_TOKEN_KEY:
+			if hashed_key != Permissions.TOKEN_KEY:
 				self._send_auth_invalid()
 				return
 			if api_function_name in Permissions.get_allowed_functions("TOKEN_MASTER"):
@@ -99,7 +91,7 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 				permission_level = API.get_permission_level(arguments["token"])
 				# if the user isn't allowed to make the request, create a security warning and reject the request
 				if api_function_name not in Permissions.get_allowed_functions(permission_level):
-					str_result = json.dumps( {"success":False, "error":"permission denied"} )
+					str_result = json.dumps( Permissions.SECURITY_VIOLATION )
 					logger.c("Security", "Rejected {}{} with permission level {} requested {}".format(	ip,
 																										" " + str(arguments["token"]) if "token" in arguments else "",
 																										permission_level,
@@ -122,29 +114,15 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 	### WEB APPEARANCE
 	def do_GET(self):
 		path = self.path.split("?")[0]
-		arguments = {k: v[0] for k, v in urlparse.parse_qs(urlparse.urlparse(self.path).query).items()}  
 
-		if path[1:] in [ "", "index.html", "index" ]:
-			self.send_response(200)
-			self.send_header('Access-Control-Allow-Origin', "*")
-			self.send_header('Content-Type', "text/html; charset=utf-8")
-			self.end_headers()
-
-			self.wfile.write(open(DIRECTORY + "/apidoc/index.html", "r").read().encode())
-			return
-		elif os.path.isfile(DIRECTORY + "/apidoc/{}".format(path[1:])):
-			self.send_response(200)
-			self.send_header('Access-Control-Allow-Origin', "*")
-			self.send_header('Content-Type', get_mime_type(path[1:]))
-			self.end_headers()
+		if path[1:] == "":
+			path = "/index.html"
+		
+		if os.path.isfile(DIRECTORY + "/apidoc/{}".format(path[1:])):
+			self._send_headers()
 			self.wfile.write(open(DIRECTORY + "/apidoc/{}".format(path[1:]), "rb").read())
 		else:
-			self.send_response(404)
-			self.send_header('Access-Control-Allow-Origin', "*")
-			self.send_header('Content-Type', "text/html; charset=utf-8")
-			self.end_headers()
-
-			self.wfile.write(open(DIRECTORY + "/apidoc/not_found.html", "r").read().encode())
+			self._send_404()
 
 
 	### SEND HEADERS/PRESET MESSAGES
@@ -172,8 +150,8 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 			logger.e("Error", str(error))
 			raise error
 	def _send_auth_invalid(self):
-		errmsg = '{"success":false, "error":"authentication invalid"}'
-		self._send_headers(content_type="application/json")
+		errmsg = json.dumps(Permissions.SECURITY_VIOLATION)
+		self._send_headers(code=403, content_type="application/json")
 		self.wfile.write(errmsg.encode())
 		logger.i("Response", errmsg)
 		return errmsg

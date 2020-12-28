@@ -13,6 +13,12 @@ PERMISSIONS = {
 }
 MASTER_TOKEN = "MASTER"
 
+with open(DIRECTORY + "/pre-shared.key", "r") as f:
+	PRE_SHARED_KEY = f.read()
+with open(DIRECTORY + "/token.key", "r") as f:
+	TOKEN_KEY = f.read()
+
+SECURITY_VIOLATION = {"success":False, "error":"permission denied"}
 
 def get_allowed_functions(permission_level):
 	if permission_level in PERMISSIONS:

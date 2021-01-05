@@ -11,7 +11,7 @@ import os, sys, json, hashlib, time
 
 # import script which executes the different api endpoints
 # from jarvis import Logger
-from jarvis import Logger
+from jarvis import Logger, Exiter
 import classes.API as API
 import classes.Permissions as Permissions
 
@@ -20,7 +20,6 @@ import classes.Permissions as Permissions
 DIRECTORY = os.path.abspath(os.path.dirname(sys.argv[0]))
 logger = Logger(DIRECTORY + "/logs/jarvis_http.log", DIRECTORY + "/logs")
 logger.console_on()
-
 
 
 # http handler class
@@ -46,16 +45,13 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 
 		## create a new logging group and add basic information
 		logger.new_group({"timestamp": time.time(), "ip": self.client_address[0], "token": arguments["token"] if "token" in arguments else False})
-		logger.i("Path", "{}?{}".format(path, "&".join([ a + "=" + b for a, b in arguments.items() ])))
-		logger.i("Body", json.dumps(body))
-
-
+		logger.i("path", "{}?{}".format(path, "&".join([ a + "=" + b for a, b in arguments.items() ])))
+		logger.i("body", json.dumps(body))
 
 		## check if user used master token
 		if "token" in arguments and arguments["token"] == Permissions.get_mastertoken():
 			self._send_auth_invalid()
-			logger.c("Security", "Rejected {} who used master token, requested {}".format(ip, path[1:]))
-
+			logger.c("security", "Rejected {} who used master token, requested {}".format(ip, path[1:]))
 
 		## check if special api call
 		if body == None:
@@ -78,13 +74,12 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 			if api_function_name in Permissions.get_allowed_functions("TOKEN_MASTER"):
 				arguments["token"] = Permissions.get_mastertoken()
 
-
 		## handle api call
 		try:
 			api_method = getattr(API, api_function_name)
 
 			# if the user didn't send a token, reject the request (if they used token-key, the token is a pre-defined token default: MASTER)
-			if "token" not in arguments:
+			if "token" not in arguments or arguments["token"].startswith("app:"):
 				str_result = self._send_auth_invalid()
 			else:
 				# find out the token permission level
@@ -92,16 +87,21 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 				# if the user isn't allowed to make the request, create a security warning and reject the request
 				if api_function_name not in Permissions.get_allowed_functions(permission_level):
 					str_result = json.dumps( Permissions.SECURITY_VIOLATION )
-					logger.c("Security", "Rejected {}{} with permission level {} requested {}".format(	ip,
+					logger.c("security", "Rejected {}{} with permission level {} requested {}".format(	ip,
 																										" " + str(arguments["token"]) if "token" in arguments else "",
 																										permission_level,
 																										path[1:]))
 				else:
 					# if the user is allowed to make the request, just call the function
-					str_result = json.dumps(api_method(ip, arguments, body, logger))
+					str_result = json.dumps({"success":False, "error": "could not find object"})
+					try:
+						str_result = json.dumps(api_method(ip, arguments, body, logger))
+					except Exception as e:
+						logger.exception("api-method", e)
+
 
 			# log the response...
-			logger.i("Response", str_result)
+			logger.i("response", str_result)
 
 			# ... and send the response
 			self._send_headers(content_type="application/json")
@@ -135,25 +135,25 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 		self._send_headers(404)
 		self.wfile.write(open(DIRECTORY + "/apidoc/not_found.html", "r").read().encode())
 
-		logger.i("Response", "404 page")
+		logger.i("response", "404 page")
 
 		if error != None:
-			logger.e("Error", str(error))
+			logger.e("error", str(error))
 			raise error
 	def _send_500(self, error=None):
 		self._send_headers(500)
 		self.wfile.write(open(DIRECTORY + "/apidoc/internal_error.html", "r").read().encode())
 		
-		logger.i("Response", "500 page")
+		logger.i("response", "500 page")
 
 		if error != None:
-			logger.e("Error", str(error))
+			logger.e("error", str(error))
 			raise error
 	def _send_auth_invalid(self):
 		errmsg = json.dumps(Permissions.SECURITY_VIOLATION)
 		self._send_headers(code=403, content_type="application/json")
 		self.wfile.write(errmsg.encode())
-		logger.i("Response", errmsg)
+		logger.i("response", errmsg)
 		return errmsg
 
 
@@ -162,7 +162,13 @@ class JarvisWebServer(BaseHTTPRequestHandler):
 		return
 
 
-### HELPER FUNCTION
+# exiter function
+def on_exit():
+	logger.i("shutdown", "shutting down")
+Exiter(on_exit)
+
+
+# helper function
 def get_mime_type(filename):
 	mimes = {
 		".123"			: "application/vnd.lotus-1-2-3",

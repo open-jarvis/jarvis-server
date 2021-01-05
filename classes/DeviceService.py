@@ -4,10 +4,13 @@
 
 import time, traceback
 import classes.Storage as Storage
+from jarvis import Exiter
+
+running = True
 
 # inactivity scan
 def inactivity_scan(root_dir):
-	while True:
+	while Exiter.running:
 		try:
 			devices = Storage.get_devices()
 			for token, device in devices.items():

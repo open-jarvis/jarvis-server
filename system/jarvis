@@ -5,7 +5,7 @@
 #
 
 import sys, os, json
-from jarvis import SetupTools, Config
+from jarvis import SetupTools, Config, Colors
 
 # functions
 def print_usage():
@@ -37,34 +37,70 @@ if not config.exists():
 	print(f"Jarvis not installed for user {usr}")
 	exit(1)
 
-APP_DIR = config.get_key("app_dir", None)
-if APP_DIR is None:
-	root_dir = config.get_key("root_dir", None)
-	if root_dir is None:
-		print("Jarvis is not setup yet!")
-		exit(1)
-	APP_DIR = f"{APP_DIR}/apps"
+
+# check if jarvis is installed
+ROOT_DIR = config.get_key("root_dir", None)
+if ROOT_DIR is None:
+	print("Jarvis is not setup yet!")
+	exit(1)
+APP_DIR = config.get_key("app_dir", f"{ROOT_DIR}/apps")
+WEB_DIR = config.get_key("web_dir", f"{ROOT_DIR}/web")
+
+success = False
 
 if command == "add-app":
 	if argument is None:
 		print_usage()
+
+	# get the app name out of the url: https://github.com/jarvis-apps/headset -> headset
 	app_name = argument.split("/")[-1]
-	SetupTools.do_action(f"clone git repository ({app_name})", f"git clone {argument} {APP_DIR}/{app_name}")
-	res = SetupTools.do_action(f"running setup script at {APP_DIR}/{app_name}/system/setup.py", f"sudo python3 {APP_DIR}/{app_name}/system/setup.py", exit_on_fail=False)
+	install_dir = f"{APP_DIR}/{app_name}"
+	# clone the git repo into the app directory and run the setup script
+	SetupTools.do_action(f"clone git repository ({app_name})", f"git clone {argument} {install_dir}")
+	res = SetupTools.do_action(f"running setup script at {install_dir}/system/setup.py", f"sudo python3 {install_dir}/system/setup.py", exit_on_fail=False)
+
+	# if the setup script ran successfully, add the app to the local database
 	if res:
-		config.set_key(config.get_key("loaded_apps", []).append({
+		loaded_apps = config.get_key("loaded_apps", [])
+
+		# check if the app uses a web extension and parse the config
+		uses_web_extension = False
+		app_web_config = {}
+		if os.path.isdir(f"{install_dir}/web-extension"):
+			uses_web_extension = True
+			app_web_config = json.loads(open(f"{install_dir}/web-extension/config.json", "r").read())
+			filename = app_web_config["file"]
+			file_from = f"{install_dir}/web-extension/{filename}"
+			file_to =   f"{WEB_DIR}/{filename}"
+			try:
+				os.link(file_from, file_to)
+				SetupTools.do_action(f"linking file from {file_from} -> {file_to}", "true")
+			except Exception as e:
+				SetupTools.do_action(f"linking file from {file_from} -> {file_to}", "false", exit_on_fail=False)
+				print(e)
+				uses_web_extension = False
+				app_web_config = {}
+
+		# update loaded apps
+		loaded_apps.append({
 			"name": app_name,
 			"web-extension": {
-				"loaded": os.path.isdir(f"{APP_DIR}/{app_name}/web-extension"),
-				"config": json.loads(open(f"{APP_DIR}/{app_name}/web-extension/config.json", "r").read()) if os.path.isdir(f"{APP_DIR}/{app_name}/web-extension") else {}
+				"loaded": uses_web_extension,
+				"config": app_web_config
 			}
-		}))
+		})
+		config.set_key("loaded_apps", loaded_apps)
 
-		print("successfully setup app")
+		success = True
 	else:
 		print("failed to execute setup script")
 		SetupTools.do_action("cleaning up", f"rm -rf {APP_DIR}/{app_name}")
 
-
-print("--- done ---")
+# end this script
+if success:
+	print(f"{Colors.GREEN}--- successfully installed app ---{Colors.END}")
+	exit(0)
+else:
+	print(f"{Colors.RED}--- failed to install app ---{Colors.END}")
+	exit(1)
 

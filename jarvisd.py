@@ -12,24 +12,14 @@
 #	--pre-shared-key <pre-shared-key>  Sets a pre-shared key for future requests
 
 
-import sys, os
+import sys, os, multiprocessing, time, os, hashlib, traceback, signal
 
-# import custom http server to handle incoming web requests
-import multiprocessing, time, os, hashlib, traceback, signal
-from http.server import BaseHTTPRequestHandler, HTTPServer
-import classes.BackendServer as BackendServer
-import classes.DeviceService as DeviceService
-import classes.AppLoader as AppLoader
-import classes.MQTTLogger as MQTTLogger
-import classes.MQTTServer as MQTTServer
-from jarvis import Logger
-
-
+# define initial variables
 DIR = os.path.dirname(os.path.realpath(__file__))
 USAGE = "\nUsage: python3 jarvisd.py --pre-shared-key <psk> --token-key <tokenkey>"
 PROCESSES = []
 
-
+# perform some checks
 if not "--use-stored" in sys.argv:
 	psk = None
 	token_key = None
@@ -53,11 +43,20 @@ if not "--use-stored" in sys.argv:
 		print("token-key not set!" + USAGE)
 		exit(1)
 
-
-	with open(f"{DIR}/pre-shared.key", "w") as f:
+	with open(f"{DIR}/storage/pre-shared.key", "w") as f:
 		f.write(hashlib.sha256(psk.encode('utf-8')).hexdigest())
-	with open(f"{DIR}/token.key", "w") as f:
+	with open(f"{DIR}/storage/token.key", "w") as f:
 		f.write(hashlib.sha256(token_key.encode('utf-8')).hexdigest())
+
+
+# import custom http server to handle incoming web requests
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import classes.BackendServer as BackendServer
+import classes.DeviceService as DeviceService
+import classes.AppLoader as AppLoader
+import classes.MQTTLogger as MQTTLogger
+import classes.MQTTServer as MQTTServer
+from jarvis import Logger, Exiter
 
 
 # runs server
@@ -65,6 +64,10 @@ def start_server(root_dir):
 	try:
 		server = HTTPServer(('', 2021), BackendServer.JarvisWebServer)
 		server.serve_forever()
+	except OSError as ose:
+		print(ose)
+		print("Maybe another Jarvis instance is already running?")
+		exit(1)
 	except Exception as e:
 		raise e
 def terminate_process(p, name, max_tries=3, time_between_tries=5, logging_instance=None):
@@ -86,12 +89,12 @@ def register_process(target_function, process_name):
 	p = multiprocessing.Process(target=target_function, name=process_name, args=[DIR])
 	p.start()
 	PROCESSES.append(p)
-def stop_all_processes(loggr):
+def stop_all_processes():
 	global PROCESSES, logger
 	for p in PROCESSES:
 		terminate_process(p, p.name, logging_instance=logger)
-def on_SIGTERM(a,b):
-	logger.e("Signal", "caught SIGTERM, stopping all subprocesses")
+def on_exit():
+	logger.e("Signal", "caught exit signal, stopping all subprocesses")
 	stop_all_processes()
 	exit(0)
 
@@ -110,7 +113,7 @@ register_process(MQTTLogger.start_logging, "mqtt sniffer")			# launch mqtt sniff
 
 
 # handle system signals
-signal.signal(signal.SIGINT, on_SIGTERM)
+Exiter(on_exit)
 
 
 try:

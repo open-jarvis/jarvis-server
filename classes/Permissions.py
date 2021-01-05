@@ -2,6 +2,8 @@
 # Copyright (c) 2020 by Philipp Scheer. All Rights Reserved.
 #
 
+import os
+
 PERMISSIONS = {
 	"TOKEN_MASTER": ["generate_token", "unregister_device", "get_devices"],
 	5: ["register_device", "am_i_registered", "hello", "id__scan", "id__answer", "get_devices", "get_property", "id__ask", "id__delete", "set_property", "generate_token", "unregister_device"	],
@@ -13,10 +15,17 @@ PERMISSIONS = {
 }
 MASTER_TOKEN = "MASTER"
 
-with open(DIRECTORY + "/pre-shared.key", "r") as f:
-	PRE_SHARED_KEY = f.read()
-with open(DIRECTORY + "/token.key", "r") as f:
-	TOKEN_KEY = f.read()
+
+DIRECTORY = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/..")
+try:
+	with open(DIRECTORY + "/storage/pre-shared.key", "r") as f:
+		PRE_SHARED_KEY = f.read()
+	with open(DIRECTORY + "/storage/token.key", "r") as f:
+		TOKEN_KEY = f.read()
+except Exception as e:
+	print(f"Exception occured while loading keys.")
+	print(f"Check if the keys exist in {DIRECTORY}/storage")
+	exit(1)
 
 SECURITY_VIOLATION = {"success":False, "error":"permission denied"}
 

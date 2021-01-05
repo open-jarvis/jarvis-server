@@ -75,9 +75,9 @@ def install():
 
 
 	# store hashed keys
-	with open(os.path.abspath(os.path.dirname(sys.argv[0])) + "/pre-shared.key", "w") as f:
+	with open(os.path.abspath(os.path.dirname(sys.argv[0])) + "/storage/pre-shared.key", "w") as f:
 		f.write(hashlib.sha256(psk.encode('utf-8')).hexdigest())
-	with open(os.path.abspath(os.path.dirname(sys.argv[0])) + "/token.key", "w") as f:
+	with open(os.path.abspath(os.path.dirname(sys.argv[0])) + "/storage/token.key", "w") as f:
 		f.write(hashlib.sha256(tk.encode('utf-8')).hexdigest())
 
 
@@ -95,12 +95,19 @@ def install():
 	SetupTools.do_action( "install service file", 					f"sudo cp -v {LOC}/system/jarvisd.service /etc/systemd/system/jarvisd.service")
 	SetupTools.do_action( "install jarvisd executable", 			f"sudo cp -v {LOC}/system/jarvis /usr/bin/jarvis")
 	SetupTools.do_action( "change jarvisd executable permissions", 	 "sudo chmod 777 /usr/bin/jarvis")
+	try:
+		os.link(config.file, "/jarvis/server/storage/jarvis.conf")
+		SetupTools.do_action(f"link config file {config.file}", 	 "true")
+	except Exception as e:
+		SetupTools.do_action(f"link config file {config.file}", 	 "false")
+		exit(1)
 	SetupTools.do_action( "reload systemd daemon", 					 "sudo systemctl daemon-reload")
 	SetupTools.do_action( "start jarvisd service", 					 "sudo systemctl start jarvisd.service")
 	SetupTools.do_action( "enable jarvisd service", 				 "sudo systemctl enable jarvisd.service")
 	SetupTools.do_action(f"change ownership of directory (to {USR})",f"sudo chown -R {USR}: {ROOT_DIR}")
 	SetupTools.do_action(f"copy api documentation to {LOC}/apidoc",	f"git clone https://github.com/open-jarvis/open-jarvis.github.io {LOC}/apidoc")
 	SetupTools.do_action( "clean up directory",						f"sudo rm -rf {DIR}")
+
 
 	print(f"Successfully set up Jarvisd in {LOC} and registered service")
 	print("")

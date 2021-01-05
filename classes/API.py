@@ -5,12 +5,13 @@
 import random, json, time, os, sys
 import classes.Storage as Storage
 
+NEW_TOKEN_LENGTH = 8
 
 ## HTTP API
 def generate_token(ip, attrs, post_body, logger):
 	if not "permission-level" in post_body or int(post_body["permission-level"]) > 4 or int(post_body["permission-level"]) < 1:
 		return {"success":False, "error":"POST permission level either not set or invalid (range 1-4)"}
-	new_token = ''.join(random.choice("abcdef0123456789") for _ in range(8))
+	new_token = ''.join(random.choice("abcdef0123456789") for _ in range(NEW_TOKEN_LENGTH))
 	b = Storage.add_token(new_token, int(post_body["permission-level"]))
 	if b:
 		return {"success":b, "token": new_token}
@@ -31,18 +32,18 @@ def register_device(ip, attrs, post_body, logger):
 	name = attrs["name"]
 	passed_token = attrs["token"]
 	dev_type = attrs["type"]
-	con_type = "app" if (attrs["native"] == "true") else "web"
+	con_type = "native" if (attrs["native"] == "true") else "web"
 
 	if Storage.is_valid(passed_token):
 		return {"success": Storage.add_device(ip, name, passed_token, dev_type, con_type, Storage.get_permission_level_for_token(passed_token)) }
 	else:
 		return {"success": False, "error": "token is not valid!"}
 def unregister_device(ip, attrs, post_body, logger):
-	if "token" in attrs:
-		token = attrs["token"]
+	if "target-token" in post_body:
+		token = post_body["target-token"]
 		return {"success": Storage.remove_device(token) }
 	else:
-		return {"success": False, "error": "no token provided!" }
+		return {"success": False, "error": "no token provided" }
 
 
 def set_property(ip, attrs, post_body, logger):

@@ -1,0 +1,16 @@
+[Unit]
+Description=RethinkDB is a NoSQL database
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+ExecStart=rethinkdb --server-name jarvis --bind 0.0.0.0 --cores 2 --log-file {{SRV_DIR}}/logs/jarvis-rethinkdb.log --daemon
+StandardOutput=append:{{SRV_DIR}}/logs/jarvis-rethinkdb-output.log
+StandardError=append:{{SRV_DIR}}/logs/jarvis-rethinkdb-error.log
+
+[Install]
+WantedBy=multi-user.target

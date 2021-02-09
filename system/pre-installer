@@ -1,0 +1,16 @@
+#!/bin/bash
+
+
+set -x
+
+
+sudo dphys-swapfile swapoff
+sed -i -E 's/CONF_SWAPSIZE=[0-9]+/CONF_SWAPSIZE=1024/g' /etc/dphys-swapfile
+sudo dphys-swapfile swapon
+
+sudo apt-get install -y clang g++ protobuf-compiler libprotobuf-dev libboost-dev curl m4 wget libssl-dev
+wget https://download.rethinkdb.com/repository/raw/dist/rethinkdb-2.4.1.tgz
+tar xf rethinkdb-2.4.1.tgz
+cd rethinkdb-2.4.1 ; ./configure --allow-fetch CXX=clang++ ; sudo make install -j3
+sudo pip3 install rethinkdb
+

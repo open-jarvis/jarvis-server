@@ -5,34 +5,28 @@
 import os
 
 PERMISSIONS = {
-	"TOKEN_MASTER": ["generate_token", "unregister_device", "get_devices"],
-	5: ["register_device", "am_i_registered", "hello", "id__scan", "id__answer", "get_devices", "get_property", "id__ask", "id__delete", "set_property", "generate_token", "unregister_device"	],
-	4: ["register_device", "am_i_registered", "hello", "id__scan", "id__answer", "get_devices", "get_property", "id__ask", "id__delete", "set_property"											],
-	3: ["register_device", "am_i_registered", "hello", "id__scan", 												"id__ask", "id__delete", "set_property"											],
-	2: ["register_device", "am_i_registered", "hello", "id__scan", "id__answer", "get_devices", "get_property"																					],
-	1: ["register_device", "am_i_registered", "hello"																																			],
-	0: []
+    "TOKEN_MASTER": ["generate_token", "unregister_device", "get_devices"],
+    5: ["register_device", "am_i_registered", "hello", "id__scan", "id__answer", "get_devices", "get_property", "id__ask", "id__delete", "set_property", "generate_token", "unregister_device"	],
+    4: ["register_device", "am_i_registered", "hello", "id__scan", "id__answer", "get_devices", "get_property", "id__ask", "id__delete", "set_property"											],
+    3: ["register_device", "am_i_registered", "hello", "id__scan", 												"id__ask", "id__delete", "set_property"											],
+    2: ["register_device", "am_i_registered", "hello", "id__scan", "id__answer", "get_devices", "get_property"																					],
+    1: ["register_device", "am_i_registered", "hello"																																			],
+    0: []
 }
 MASTER_TOKEN = "MASTER"
 
 
 DIRECTORY = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/..")
-try:
-	with open(DIRECTORY + "/storage/pre-shared.key", "r") as f:
-		PRE_SHARED_KEY = f.read()
-	with open(DIRECTORY + "/storage/token.key", "r") as f:
-		TOKEN_KEY = f.read()
-except Exception as e:
-	print(f"Exception occured while loading keys.")
-	print(f"Check if the keys exist in {DIRECTORY}/storage")
-	exit(1)
 
-SECURITY_VIOLATION = {"success":False, "error":"permission denied"}
+SECURITY_VIOLATION = {"success": False, "error": "permission denied"}
+
 
 def get_allowed_functions(permission_level):
-	if permission_level in PERMISSIONS:
-		return PERMISSIONS[permission_level]
-	else:
-		return []
+    if permission_level in PERMISSIONS:
+        return PERMISSIONS[permission_level]
+    else:
+        return []
+
+
 def get_mastertoken():
-	return MASTER_TOKEN
+    return MASTER_TOKEN

@@ -29,42 +29,12 @@ import traceback
 
 # define initial variables
 DIR = os.path.dirname(os.path.realpath(__file__))
-USAGE = "\nUsage: python3 jarvisd.py --pre-shared-key <psk> --token-key <tokenkey>"
+USAGE = "\nUsage: python3 jarvisd.py"
 PROCESSES = []
-
-# perform some checks
-if not "--use-stored" in sys.argv:
-    psk = None
-    token_key = None
-    cnf = Config()
-    if "--pre-shared-key" in sys.argv:
-        try:
-            psk = sys.argv[sys.argv.index("--pre-shared-key") + 1]
-            cnf.set("pre-shared-key", hashlib.sha256(psk.encode('utf-8')).hexdigest())
-        except Exception as e:
-            print("pre-shared-key not set!" + USAGE)
-            exit(1)
-    else:
-        print("pre-shared-key not set!" + USAGE)
-        exit(1)
-
-    if "--token-key" in sys.argv:
-        try:
-            token_key = sys.argv[sys.argv.index("--token-key") + 1]
-            cnf.set("token-key", hashlib.sha256(token_key.encode('utf-8')).hexdigest())
-        except Exception as e:
-            print("token-key not set!" + USAGE)
-            exit(1)
-    else:
-        print("token-key not set!" + USAGE)
-        exit(1)
-
-
-# import custom http server to handle incoming web requests
 
 
 # runs server
-def start_server(root_dir):
+def start_server():
     try:
         server = HTTPServer(('', 2021), BackendServer.JarvisWebServer)
         server.serve_forever()

@@ -2,20 +2,12 @@
 # Copyright (c) 2020 by Philipp Scheer. All Rights Reserved.
 #
 
-from jarvis import SetupTools, Config, Database
+from jarvis import SetupTools, Config
 from getpass import getpass
 import hashlib
 import os
 import sys
-import time
-
-
-# run the pre-installer file
-if "--skip-pre" not in sys.argv:
-    print("\u001b[7mHi! Jarvis here, I'll install my database application before running this script!\u001b[0m")
-    time.sleep(1)
-    os.system("/bin/bash " + os.path.dirname(os.path.abspath(__file__)) +
-              f"/system/pre-installer")
+import subprocess
 
 
 ROOT_DIR = "/jarvis"
@@ -29,6 +21,7 @@ DIR = os.path.dirname(os.path.abspath(__file__))
 def install():
     global ROOT_DIR, LOC, APP_DIR, WEB_DIR, USR, DIR
 
+    cnf = Config()
     SetupTools.check_python_version(3)
     SetupTools.check_root()
     if "--no-input" not in sys.argv:
@@ -42,18 +35,15 @@ def install():
         psk = getpass("  Pre-shared key : ")
         tk = getpass("       Token key : ")
 
-        # setup the database
-        Database.create()
-        cnf = Config()
-        cnf.set("pre-shared-key", hashlib.sha256(psk.encode('utf-8')).hexdigest())
-        cnf.set("token-key", hashlib.sha256(tk.encode('utf-8')).hexdigest())
-        cnf.set("directories", {
-            "root": ROOT_DIR,
-            "server": LOC,
-            "apps": APP_DIR,
-            "web": WEB_DIR
-        })
-        cnf.set("install-user", USR)
+    cnf.set("pre-shared-key", hashlib.sha256(psk.encode('utf-8')).hexdigest())
+    cnf.set("token-key", hashlib.sha256(tk.encode('utf-8')).hexdigest())
+    cnf.set("directories", {
+        "root": ROOT_DIR,
+        "server": LOC,
+        "apps": APP_DIR,
+        "web": WEB_DIR
+    })
+    cnf.set("install-user", USR)
 
 
     # create directories

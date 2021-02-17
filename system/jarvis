@@ -7,101 +7,26 @@
 import sys
 import os
 import json
+import argparse
 from jarvis import SetupTools, Config, Colors
 
 
-def print_usage():
-    print("Usage: jarvis <command> <argument>")
-    print("")
-    print(" command           | argument")
-    print("-------------------+-------------------------------------------")
-    print(" add-app           | https://github.com/jarvis-apps/headset")
-    print(" remove-app        | headset")
-    # print(" add-local-app     | /home/user/Downloads/<app>")
-    print(" list-apps         | ")
-    exit(0)
-
-
-# check usage
-if len(sys.argv) == 1 or "--help" in sys.argv or "-h" in sys.argv:
-    print_usage()
-
-
-# program
-command = sys.argv[1]
-argument = sys.argv[2] if len(sys.argv) > 2 else None
+parser = argparse.ArgumentParser()
+group = parser.add_mutually_exclusive_group(required=True)
+group.add_argument("-a", "--add-app",
+                   help="download an app from a git repository and install it", type=str)
+args = parser.parse_args()
 
 
 # load jarvis configuration
 cnf = Config()
-dirs = cnf.get("directories")
+dirs = cnf.get("directories", None)
+if dirs is None:
+    print("error: jarvis might not be installed yet")
+    exit(1)
 ROOT_DIR = dirs["root"]
 APP_DIR = dirs["root"]
 WEB_DIR = dirs["web"]
 
 
-# check if jarvis is installed
-
-
-success = False
-
-if command == "add-app":
-    if argument is None:
-        print_usage()
-
-    # get the app name out of the url: https://github.com/jarvis-apps/headset -> headset
-    app_name = argument.split("/")[-1]
-    install_dir = f"{APP_DIR}/{app_name}"
-    # clone the git repo into the app directory and run the setup script
-    SetupTools.do_action(
-        f"clone git repository ({app_name})", f"git clone {argument} {install_dir}")
-    res = SetupTools.do_action(
-        f"running setup script at {install_dir}/system/setup.py", f"sudo python3 {install_dir}/system/setup.py", exit_on_fail=False)
-
-    # if the setup script ran successfully, add the app to the local database
-    if res:
-        loaded_apps = cnf.get_key("loaded_apps", [])
-
-        # check if the app uses a web extension and parse the config
-        uses_web_extension = False
-        app_web_config = {}
-        if os.path.isdir(f"{install_dir}/web-extension"):
-            uses_web_extension = True
-            app_web_config = json.loads(
-                open(f"{install_dir}/web-extension/config.json", "r").read())
-            filename = app_web_config["file"]
-            file_from = f"{install_dir}/web-extension/{filename}"
-            file_to = f"{WEB_DIR}/{filename}"
-            try:
-                os.link(file_from, file_to)
-                SetupTools.do_action(
-                    f"linking file from {file_from} -> {file_to}", "true")
-            except Exception as e:
-                SetupTools.do_action(
-                    f"linking file from {file_from} -> {file_to}", "false", exit_on_fail=False)
-                print(e)
-                uses_web_extension = False
-                app_web_config = {}
-
-        # update loaded apps
-        loaded_apps.append({
-            "name": app_name,
-            "web-extension": {
-                "loaded": uses_web_extension,
-                "config": app_web_config
-            }
-        })
-        cnf.set("loaded_apps", loaded_apps)
-
-        success = True
-    else:
-        print("failed to execute setup script")
-        SetupTools.do_action("cleaning up", f"rm -rf {APP_DIR}/{app_name}")
-
-# end this script
-if success:
-    print(f"{Colors.GREEN}--- successfully installed app ---{Colors.END}")
-    exit(0)
-else:
-    print(f"{Colors.RED}--- failed to install app ---{Colors.END}")
-    exit(1)
+print(args)

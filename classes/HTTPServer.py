@@ -11,13 +11,12 @@ import classes.Permissions as Permissions
 import os
 import sys
 import json
-import time
 import hashlib
 import urllib.parse as urlparse
 
 
 DIRECTORY = os.path.abspath(os.path.dirname(sys.argv[0]))
-logger = Logger("backendserver")
+logger = Logger("http-api")
 logger.console_on()
 
 
@@ -25,7 +24,9 @@ def start_server():
     """
     Starts a JarvisWebServer instance which handles outside API requests
     """
+    global logger
     try:
+        logger.i("start", "starting http api server")
         server = HTTPServer(('', 2021), JarvisWebServer)
         server.serve_forever()
     except OSError as ose:
@@ -40,6 +41,7 @@ class JarvisWebServer(BaseHTTPRequestHandler):
     """
     The JarvisWebServer handles outside API requests
     """
+
     def do_OPTIONS(self):
         """
         Handle an OPTIONS request to check which methods are allowed
@@ -71,7 +73,8 @@ class JarvisWebServer(BaseHTTPRequestHandler):
         # reject master token access (master token is only used by jarvis internal applications)
         if "token" in arguments and arguments["token"] == Permissions.MASTER_TOKEN:
             self._send_auth_invalid()
-            logger.c("security", f"rejected {ip} who used master token, requested {path}")
+            logger.c(
+                "security", f"rejected {ip} who used master token, requested {path}")
 
         # check if a special request
         if body is None:
@@ -95,16 +98,17 @@ class JarvisWebServer(BaseHTTPRequestHandler):
                 arguments["token"] = Permissions.MASTER_TOKEN
 
         try:
-
             if "token" not in arguments or arguments["token"].startswith("app:"):
                 str_result = self._send_auth_invalid()
             else:
                 permission_level = API.get_permission_level(arguments["token"])
                 if api_function_name not in Permissions.get_allowed_functions(permission_level):
                     str_result = json.dumps(Permissions.SECURITY_VIOLATION)
-                    logger.c("security", f"Rejected {ip} {arguments['token'] if 'token' in arguments else ''} with permission level {permission_level} requested {self.path}")
+                    logger.c(
+                        "security", f"Rejected {ip} {arguments['token'] if 'token' in arguments else ''} with permission level {permission_level} requested {self.path}")
                 else:
-                    str_result = json.dumps({"success": False, "error": "could not find object"})
+                    str_result = json.dumps(
+                        {"success": False, "error": "could not find object"})
                     try:
                         api_method = getattr(API, api_function_name)
                         str_result = json.dumps(
@@ -112,7 +116,8 @@ class JarvisWebServer(BaseHTTPRequestHandler):
                     except Exception as e:
                         logger.exception("api-method", e)
                         self._send_headers(content_type="application/json")
-                        self.wfile.write(json.dumps(Permissions.FAILED_MESSAGE).encode())
+                        self.wfile.write(json.dumps(
+                            Permissions.FAILED_MESSAGE).encode())
 
             logger.i("response", str_result)
 
@@ -132,6 +137,9 @@ class JarvisWebServer(BaseHTTPRequestHandler):
             self._send_headers()
             self.wfile.write(
                 open(DIRECTORY + "/apidoc/{}".format(path[1:]), "rb").read())
+        elif path[1:] == "ping":
+            self._send_headers(content_type="application/json")
+            self.wfile.write("pong".encode())
         else:
             self._send_404()
 

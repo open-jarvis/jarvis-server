@@ -69,7 +69,8 @@ def register_device(data: dict) -> tuple:
 def unregister_device(data: dict) -> tuple:
     require(data, ["target-token"])
 
-    Database().table("instants").filter({"asked-by": data["target-token"]}).delete()
+    Database().table("instants").filter(
+        {"asked-by": data["target-token"]}).delete()
     return (True, Database().table("devices").filter({"token": data["target-token"]}).delete())
 
 
@@ -86,7 +87,8 @@ def get_devices(data: dict) -> tuple:
 def set_property(data: dict) -> tuple:
     require(data, ["token", "property", "value"])
 
-    updated_object = Database().table("devices").filter({"token": data["token"]})[0]
+    updated_object = Database().table(
+        "devices").filter({"token": data["token"]})[0]
     updated_object["data"][data["property"]] = data["value"]
 
     return (True, Database().table("devices").filter({"token": data["token"]}).update(updated_object))
@@ -186,7 +188,7 @@ def id__delete(data: dict) -> tuple:
 
 def get_permission_level(data: dict) -> tuple:
     require(data, ["token"])
-    
+
     return (True, Database().table("devices").filter({"token": data["token"]})[0]["permission-level"])
 
 

@@ -2,12 +2,10 @@
 # Copyright (c) 2020 by Philipp Scheer. All Rights Reserved.
 #
 
-import sys
 import time
 import json
 from jarvis import MQTT, Exiter, Logger
 import classes.API as API
-import classes.MQTTTopics as Topics
 
 ms = None
 logger = None
@@ -32,7 +30,7 @@ def on_message(c, ud, msg):
             "jarvis/api/", "").replace("/", "__").replace("-", "_")
         data = json.loads(msg.payload.decode())
 
-        res = json.dumps(getattr(Topics, topic)(data)) if "token" in data else json.dumps(
+        res = json.dumps(getattr(API, topic)(data)) if "token" in data else json.dumps(
             {"success": False, "error": "token parameter missing"})
 
         if "reply-to" in data:
@@ -45,10 +43,10 @@ def on_message(c, ud, msg):
         logger.e("on_msg", str(e))
 
 
-def start_server(DIR):
+def start_server():
     global ms, logger
-    logger = Logger("mqttserver")
+    logger = Logger("mqtt-api")
     logger.console_on()
-    logger.i("mqtt_server", "starting server")
+    logger.i("start", "starting mqtt api server")
     ms = MQTTServer()
     ms.start_mainloop()

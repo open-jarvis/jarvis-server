@@ -3,17 +3,11 @@
 #
 
 
-from jarvis import Logger, Exiter, Config, ProcessPool
+import time
+import traceback
+from jarvis import Logger, Exiter, ProcessPool
 import classes.MQTTServer as MQTTServer
 import classes.HTTPServer as HTTPServer
-import sys
-import os
-import multiprocessing
-from multiprocessing import Pool
-import time
-import os
-import hashlib
-import traceback
 
 
 # initiate logger

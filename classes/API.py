@@ -184,6 +184,12 @@ def id__delete(data: dict) -> tuple:
     return (True, Database().table("instants").filter({"id": data["id"]}).delete())
 
 
+def get_permission_level(data: dict) -> tuple:
+    require(data, ["token"])
+    
+    return (True, Database().table("devices").filter({"token": data["token"]})[0]["permission-level"])
+
+
 # helper functions
 def require(existing: dict, required: list) -> None:
     assert all(x in existing for x in required)

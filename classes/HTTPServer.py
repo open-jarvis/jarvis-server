@@ -30,12 +30,12 @@ def start_server():
         logger.i("start", "starting http api server")
         server = HTTPServer(('', 2021), JarvisWebServer)
         server.serve_forever()
-    except OSError as ose:
-        print(traceback.format_exc())
-        print("Maybe another Jarvis instance is already running?")
+    except OSError:
+        logger.e("server", f"another jarvis instance is already running - {traceback.format_exc()}")
         exit(1)
     except Exception as e:
-        raise e
+        logger.e("server", f"unknown exception while starting jarvis http server - {traceback.format_exc()}")
+        exit(1)
 
 
 class JarvisWebServer(BaseHTTPRequestHandler):
@@ -108,7 +108,7 @@ class JarvisWebServer(BaseHTTPRequestHandler):
                 if api_function_name not in Permissions.get_allowed_functions(permission_level):
                     str_result = json.dumps(Permissions.SECURITY_VIOLATION)
                     logger.c(
-                        "security", f"Rejected {ip} {arguments['token'] if 'token' in arguments else ''} with permission level {permission_level} requested {self.path}")
+                        "security", f"rejected {ip} {arguments['token'] if 'token' in arguments else ''} with permission level {permission_level} requested {self.path}")
                 else:
                     str_result = json.dumps(
                         {"success": False, "error": "could not find object"})

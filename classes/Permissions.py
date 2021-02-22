@@ -3,7 +3,8 @@
 #
 
 import os
-from jarvis import Config
+from jarvis import Config, Logger
+
 
 PERMISSIONS = {
     "TOKEN_MASTER": ["generate_token", "unregister_device", "get_devices"],
@@ -18,16 +19,19 @@ MASTER_TOKEN = "MASTER"
 
 
 cnf = Config()
+logger = Logger("permissions")
 PRE_SHARED_KEY = cnf.get("pre-shared-key", None)
 TOKEN_KEY = cnf.get("token-key", None)
 if PRE_SHARED_KEY is None or TOKEN_KEY is None:
-    raise Exception("jarvis api keys not configured")
+    logger.e("api-keys", "jarvis api keys not configured")
+    exit(1)
 
 
 DIRECTORY = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/..")
 
 SECURITY_VIOLATION = {"success": False, "error": "permission denied"}
 FAILED_MESSAGE = {"success": False, "error": "unknown error, check logs"}
+
 
 def get_allowed_functions(permission_level: int = 0):
     """

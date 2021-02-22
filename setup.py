@@ -2,12 +2,11 @@
 # Copyright (c) 2020 by Philipp Scheer. All Rights Reserved.
 #
 
-from jarvis import SetupTools, Config
+from jarvis import SetupTools, Config, Colors
 from getpass import getpass
 import hashlib
 import os
 import sys
-import subprocess
 
 
 ROOT_DIR = "/jarvis"
@@ -16,12 +15,12 @@ APP_DIR = f"{ROOT_DIR}/apps"
 WEB_DIR = f"{ROOT_DIR}/web"
 USR = os.getlogin()
 DIR = os.path.dirname(os.path.abspath(__file__))
+cnf = Config()
 
 
 def install():
-    global ROOT_DIR, LOC, APP_DIR, WEB_DIR, USR, DIR
+    global cnf, ROOT_DIR, LOC, APP_DIR, WEB_DIR, USR, DIR
 
-    cnf = Config()
     SetupTools.check_python_version(3)
     SetupTools.check_root()
     if "--no-input" not in sys.argv:
@@ -31,12 +30,12 @@ def install():
         WEB_DIR = f"{ROOT_DIR}/web"
         USR = SetupTools.get_default_user(USR)
 
-        # ask for keys and store them securely
-        psk = getpass("  Pre-shared key : ")
-        tk = getpass("       Token key : ")
+        ask_and_store_credentials()
 
-    cnf.set("pre-shared-key", hashlib.sha256(psk.encode('utf-8')).hexdigest())
-    cnf.set("token-key", hashlib.sha256(tk.encode('utf-8')).hexdigest())
+    if cnf.get("pre-shared-key", None) is None or cnf.get("token-key", None) is None:
+        print(f"{Colors.RED}No Pre-Shared key or Token key stored yet{Colors.END}")
+        exit(1)
+
     cnf.set("directories", {
         "root": ROOT_DIR,
         "server": LOC,
@@ -44,7 +43,6 @@ def install():
         "web": WEB_DIR
     })
     cnf.set("install-user", USR)
-
 
     # create directories
     for d in [LOC, APP_DIR, WEB_DIR, f"{LOC}/logs"]:
@@ -127,7 +125,6 @@ def change_static_ip(interface, ip_address, routers, dns, cidr_mask):
     except Exception as ex:
         print("Static IP Error: {}".format(ex))
         raise ex
-        return False
     finally:
         pass
 
@@ -145,4 +142,17 @@ def replace_in_file(path, search, replacement):
         f.write(contents)
 
 
-install()
+def ask_and_store_credentials():
+    # ask for keys and store them securely
+    psk = getpass("  Pre-shared key : ")
+    tk = getpass("       Token key : ")
+
+    # NOTE: maybe switch to sha512 -> slower but more secure
+    cnf.set("pre-shared-key", hashlib.sha256(psk.encode('utf-8')).hexdigest())
+    cnf.set("token-key", hashlib.sha256(tk.encode('utf-8')).hexdigest())
+
+
+if "-c" in sys.argv or "--credentials" in sys.argv:
+    ask_and_store_credentials()
+else:
+    install()

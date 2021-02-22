@@ -4,6 +4,7 @@
 
 import time
 import json
+import traceback
 from jarvis import MQTT, Exiter, Logger
 import classes.API as API
 
@@ -40,7 +41,7 @@ def on_message(c, ud, msg):
         else:
             logger.w("on_msg", "no 'reply-to' channel")
     except Exception as e:
-        logger.e("on_msg", str(e))
+        logger.e("on_msg", traceback.format_exc())
 
 
 def start_server():

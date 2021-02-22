@@ -27,11 +27,13 @@ TOKEN_EXPIRATION_SECONDS = 120
 TOKEN_LENGTH = 8
 
 
-def generate_token(data: dict) -> tuple:
+def generate_token(data: dict, token: str = None) -> tuple:
     require(data, ["permission-level"])
 
-    token = ''.join(random.choice("abcdef0123456789")
-                    for _ in range(TOKEN_LENGTH))
+    if token is None:
+        token = ''.join(random.choice("abcdef0123456789")
+                        for _ in range(TOKEN_LENGTH))
+
     Database().table("tokens").insert({
         "token": token,
         "permission-level": data["permission-level"],
@@ -43,6 +45,9 @@ def generate_token(data: dict) -> tuple:
 
 def register_device(data: dict) -> tuple:
     require(data, ["name", "token", "type"])
+
+    if data["token"].startswith("app:"):
+        generate_token({"permission-level": 4}, data["token"])
 
     token = Database().table("tokens").filter(
         {"token": data["token"]})[0]
@@ -98,8 +103,11 @@ def get_property(data: dict) -> tuple:
     require(data, ["token", "property"])
 
     if "target-token" in data:
-        return (True, Database().table("devices").filter({"token": data["target-token"]})[0]["data"][data["property"]])
-    return (True, Database().table("devices").filter(lambda y: data["property"] in y["data"]))
+        try:
+            return (True, list(Database().table("devices").filter({"token": data["target-token"]})[0]["data"][data["property"]]))
+        except KeyError as e:
+            return (True, None)
+    return (True, list(Database().table("devices").filter(lambda y: data["property"] in y["data"])))
 
 
 def hello(data: dict) -> tuple:
@@ -116,26 +124,8 @@ def am_i_registered(data: dict) -> tuple:
     return (Database().table("devices").filter({"token": data["token"]}).found, None)
 
 
-def start_debug(data: dict) -> tuple:
-    require(data, ["token"])
-    # TODO
-    return (False, "not implemented yet")
-
-
-def scan_debug(data: dict) -> tuple:
-    require(data, ["token"])
-    # TODO
-    return (False, "not implemented yet")
-
-
-def end_debug(data: dict) -> tuple:
-    require(data, ["token"])
-    # TODO
-    return (False, "not implemented yet")
-
-
-def id__ask(data: dict) -> tuple:
-    require(data, ["token", "type", "name", "infos", "options"])
+def decision__ask(data: dict) -> tuple:
+    require(data, ["token", "type", "title", "infos", "options"])
 
     id = "".join(random.choice("abcdef0123456") for _ in range(32))
     Database().table("instants").insert({
@@ -143,7 +133,7 @@ def id__ask(data: dict) -> tuple:
         "asked-by": data["token"],
         "asked-at": int(time.time()),
         "type": data["type"],
-        "name": data["name"],
+        "title": data["title"],
         "infos": data["infos"],
         "options": data["options"],
         "answered": False,
@@ -152,7 +142,7 @@ def id__ask(data: dict) -> tuple:
     return (True, id)
 
 
-def id__answer(data: dict) -> tuple:
+def decision__answer(data: dict) -> tuple:
     require(data, ["token", "id", "option"])
 
     result = Database().table("instants").filter({"id": data["id"]})[0]
@@ -168,7 +158,7 @@ def id__answer(data: dict) -> tuple:
     return (True, Database().table("instants").filter({"id": data["id"]}).update({"answered": True}))
 
 
-def id__scan(data: dict) -> tuple:
+def decision__scan(data: dict) -> tuple:
     require(data, ["token"])
 
     filter_object = {}
@@ -180,7 +170,7 @@ def id__scan(data: dict) -> tuple:
     return (True, list(Database().table("instants").filter(filter_object)))
 
 
-def id__delete(data: dict) -> tuple:
+def decision__delete(data: dict) -> tuple:
     require(data, ["token", "id"])
 
     return (True, Database().table("instants").filter({"id": data["id"]}).delete())

@@ -18,9 +18,13 @@ PERMISSIONS = {
 MASTER_TOKEN = "MASTER"
 
 
+print("Permissions::Config()")
 cnf = Config()
+print("Permissions::Logger()")
 logger = Logger("permissions")
+print("Permissions::get::psk")
 PRE_SHARED_KEY = cnf.get("pre-shared-key", None)
+print("Permissions::get::tk")
 TOKEN_KEY = cnf.get("token-key", None)
 if PRE_SHARED_KEY is None or TOKEN_KEY is None:
     logger.e("api-keys", "jarvis api keys not configured")

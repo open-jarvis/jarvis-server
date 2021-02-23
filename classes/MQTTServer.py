@@ -41,7 +41,8 @@ def on_message(c, ud, msg):
         else:
             logger.w("on_msg", "no 'reply-to' channel")
     except Exception as e:
-        logger.e("on_msg", traceback.format_exc())
+        logger.e(
+            "on_msg", f"unknown exception occured: {str(e)}", traceback.format_exc())
 
 
 def start_server():

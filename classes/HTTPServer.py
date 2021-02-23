@@ -31,10 +31,12 @@ def start_server():
         server = HTTPServer(('', 2021), JarvisWebServer)
         server.serve_forever()
     except OSError:
-        logger.e("server", f"another jarvis instance is already running - {traceback.format_exc()}")
+        logger.e("server", f"another jarvis instance is already running",
+                 traceback.format_exc())
         exit(1)
     except Exception as e:
-        logger.e("server", f"unknown exception while starting jarvis http server - {traceback.format_exc()}")
+        logger.e("server", f"unknown exception while starting jarvis http server",
+                 traceback.format_exc())
         exit(1)
 
 
@@ -99,7 +101,7 @@ class JarvisWebServer(BaseHTTPRequestHandler):
                 arguments["token"] = Permissions.MASTER_TOKEN
 
         try:
-            # this line is important: reject all app requests to the http api, but accept them in the 
+            # this line is important: reject all app requests to the http api, but accept them in the
             # backend API class. all apps should request ressources over the MQTT API
             if "token" not in arguments or arguments["token"].startswith("app:"):
                 str_result = self._send_auth_invalid()

@@ -27,7 +27,7 @@ try:
     logger.i("exiting", f"caught exit signal, exiting")
 except Exception as e:
     logger.e(
-        "stopping", f"caught exception in infinite loop, stopping all subprocesses: {traceback.format_exc()}")
+        "stopping", f"caught exception in infinite loop, stopping all subprocesses", traceback.format_exc())
 
 ppool.stop_all()
 exit(0)

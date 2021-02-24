@@ -154,5 +154,9 @@ def ask_and_store_credentials():
 
 if "-c" in sys.argv or "--credentials" in sys.argv:
     ask_and_store_credentials()
+    exit(0)
+if "-h" in sys.argv or "--help" in sys.argv:
+    print("Usage: python3 setup.py [-h | --help] [-c | --credentials]")
+    exit(0)
 else:
     install()

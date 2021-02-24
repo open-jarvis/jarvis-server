@@ -6,11 +6,15 @@ Jarvis backend and which handles incoming data from mobile phones and smart devi
 
 * [Jarvis Disk Image (TODO)](#TODO)
 * [Jarvis Installer](https://github.com/open-jarvis/jarvis)
-* [Plain Installation (This README)](#installation)
+* [Source Installation](#source-installation)
+    - [Raspberry PI](#rasperry-pi)
+    - [Ubuntu](#ubuntu)
 
-## Installation
+## Source Installation
 
-### Upgrade your system
+### Raspberry Pi
+
+#### Upgrade your system
 
 ``` bash
 sudo apt update
@@ -18,9 +22,9 @@ sudo apt upgrade -y
 sudo apt install -y git python3 python3-pip
 ```
 
-### Install the Database
+#### Install the Database
 
-```bash
+``` bash
 # TAKEN FROM https://github.com/jguillod/couchdb-on-raspberry-pi
 wget http://packages.erlang-solutions.com/debian/erlang_solutions.asc
 sudo apt-key add erlang_solutions.asc
@@ -71,7 +75,7 @@ sudo systemctl enable couchdb.service
 sudo systemctl start couchdb.service
 ```
 
-### Install the Jarvis Code
+#### Install the Jarvis Code
 
 ``` bash
 sudo pip3 install --upgrade open-jarvis
@@ -81,4 +85,37 @@ git clone https://github.com/open-jarvis/jarvis-server
 sudo python3 jarvis-server/setup.py
 # launch installer script
 # and follow the instructions
+```
+
+### Ubuntu
+
+#### Upgrade the system
+
+``` bash
+sudo apt update
+sudo apt upgrade -y
+sudo apt install -y git python3 python3-pip
+```
+
+#### Install the Database inside a Docker container
+```bash
+curl -fsSL https://test.docker.com | sh
+sudo usermod -aG docker $USER
+
+mkdir .couchdb-data
+docker pull couchdb
+docker run \
+    --restart=always \
+    -p 5984:5984 \
+    -v /home/$USER/.couchdb-data:/opt/couchdb/data \
+    -e COUCHDB_USER="jarvis" \
+    -e COUCHDB_PASSWORD="jarvis" \
+    -d couchdb
+```
+
+#### Install the Jarvis code
+```bash
+git clone https://github.com/open-jarvis/server
+sudo apt install -y mosquitto python3-paho-mqtt
+sudo pip3 install --upgrade open-jarvis
 ```

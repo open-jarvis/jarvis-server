@@ -69,6 +69,12 @@ cd $COUCHDB_DIR/etc
 # change access rights
 sudo chmod 666 $COUCHDB_DIR/etc/local.ini
 
+echo "########## MODIFY /home/couchdb/etc/local.ini ##########"
+echo "change ';admin = password' to 'jarvis = jarvis'"
+echo "change ';bind_address = 127.0.0.1' to 'bind_address = 0.0.0.0'"
+echo "########################################################"
+sleep 20
+
 # enable couchdb service
 sudo systemctl daemon-reload
 sudo systemctl enable couchdb.service

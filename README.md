@@ -94,13 +94,14 @@ sudo python3 jarvis-server/setup.py
 ``` bash
 sudo apt update
 sudo apt upgrade -y
-sudo apt install -y git python3 python3-pip
+sudo apt install -y git curl python3 python3-pip
 ```
 
 #### Install the Database inside a Docker container
 ```bash
-curl -fsSL https://test.docker.com | sh
+curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker $USER
+su - $USER
 
 mkdir .couchdb-data
 docker pull couchdb
@@ -115,7 +116,12 @@ docker run \
 
 #### Install the Jarvis code
 ```bash
-git clone https://github.com/open-jarvis/server
 sudo apt install -y mosquitto python3-paho-mqtt
-sudo pip3 install --upgrade open-jarvis
+sudo -H pip3 install --upgrade open-jarvis
+git clone https://github.com/open-jarvis/server
+cd server
+sudo python3 setup.py
 ```
+
+The Jarvis server is now up and running.  
+You should now think about installing an <a href="https://github.com/open-jarvis/web">assistant</a>

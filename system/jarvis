@@ -4,11 +4,8 @@
 # Copyright (c) 2020 by Philipp Scheer. All Rights Reserved.
 #
 
-import sys
-import os
-import json
 import argparse
-from jarvis import SetupTools, Config, Colors
+from jarvis import Config
 
 
 parser = argparse.ArgumentParser()

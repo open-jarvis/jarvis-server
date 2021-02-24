@@ -2,7 +2,7 @@
 # Copyright (c) 2020 by Philipp Scheer. All Rights Reserved.
 #
 
-from jarvis import SetupTools, Config, Colors
+from jarvis import SetupTools, Config, Colors, Database
 from getpass import getpass
 import hashlib
 import os
@@ -15,6 +15,10 @@ APP_DIR = f"{ROOT_DIR}/apps"
 WEB_DIR = f"{ROOT_DIR}/web"
 USR = os.getlogin()
 DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+[Database().table(x) for x in ["devices", "applications", "logs",
+                               "instants", "tokens", "config", "brain"]]
 cnf = Config()
 
 
@@ -30,7 +34,8 @@ def install():
         WEB_DIR = f"{ROOT_DIR}/web"
         USR = SetupTools.get_default_user(USR)
 
-        ask_and_store_credentials()
+        if cnf.get("pre-shared-key", None) is None or cnf.get("token-key", None) is None:
+            ask_and_store_credentials()
 
     if cnf.get("pre-shared-key", None) is None or cnf.get("token-key", None) is None:
         print(f"{Colors.RED}No Pre-Shared key or Token key stored yet{Colors.END}")
@@ -54,7 +59,7 @@ def install():
 
     # install jarvis packages
     SetupTools.do_action(
-        "upgrading system", "sudo apt update ; sudo apt upgrade -y", exit_on_fail=False)
+        "updating package sources", "sudo apt update", exit_on_fail=False)
     SetupTools.do_action("installing packages",
                          "sudo apt install -y git python3-pip mosquitto")
 
@@ -88,45 +93,6 @@ def install():
     print("")
     print("Please reboot!")
     exit(0)
-
-
-def change_static_ip(interface, ip_address, routers, dns, cidr_mask):
-    conf_file = '/etc/dhcpcd.conf'
-    try:
-        # Sanitize/validate params above
-        with open(conf_file, 'r') as file:
-            data = file.readlines()
-
-        # Find if config exists
-        ethFound = next(
-            (x for x in data if 'interface ' + interface in x), None)
-        ethIndex = None
-
-        if ethFound:
-            ethIndex = data.index(ethFound)
-            if data[ethIndex].startswith('#'):
-                # commented out by default, make active
-                data[ethIndex] = data[ethIndex].replace('#', '')
-
-        # If config is found, use index to edit the lines you need ( the next 3)
-        if ethIndex:
-            data[ethIndex+1] = f'static ip_address={ip_address}/{cidr_mask}\n'
-            data[ethIndex+2] = f'static routers={routers}\n'
-            data[ethIndex+3] = f'static domain_name_servers={dns}\n'
-
-            with open(conf_file, 'w') as file:
-                file.writelines(data)
-        else:
-            with open(conf_file, 'a') as file:
-                file.write("\ninterface {}\nstatic ip_address={}/{}\nstatic routers={}\nstatic domain_name_servers={}\n".format(
-                    interface, ip_address, cidr_mask, routers, dns))
-
-        return True
-    except Exception as ex:
-        print("Static IP Error: {}".format(ex))
-        raise ex
-    finally:
-        pass
 
 
 def replace_in_file(path, search, replacement):

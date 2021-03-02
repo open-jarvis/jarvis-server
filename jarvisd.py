@@ -6,9 +6,9 @@
 import time
 import traceback
 from jarvis import Logger, Exiter, ProcessPool
-import classes.MQTTServer as MQTTServer
-import classes.HTTPServer as HTTPServer
-
+import core.MQTTServer as MQTTServer
+import core.HTTPServer as HTTPServer
+import satellite.DatabaseAnalytics as DatabaseAnalytics
 
 # initiate logger
 logger = Logger("jarvisd")
@@ -19,6 +19,7 @@ logger.console_on()
 ppool = ProcessPool(logger)
 ppool.register(HTTPServer.start_server, "http api server")
 ppool.register(MQTTServer.start_server, "mqtt api server")
+ppool.register(DatabaseAnalytics.start_analysis, "database analytics")
 
 
 try:

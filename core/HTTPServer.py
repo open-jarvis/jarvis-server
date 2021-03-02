@@ -5,13 +5,12 @@
 
 # import global packages
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from jarvis import Logger, Exiter
-import classes.API as API
-import classes.Permissions as Permissions
+from jarvis import Logger, Exiter, Security
+import core.API as API
+import core.Permissions as Permissions
 import os
 import sys
 import json
-import hashlib
 import traceback
 import urllib.parse as urlparse
 
@@ -85,14 +84,14 @@ class JarvisWebServer(BaseHTTPRequestHandler):
             return
         if "psk" in body:
             psk = body["psk"]
-            hashed_psk = hashlib.sha256(psk.encode('utf-8')).hexdigest()
+            hashed_psk = Security.password_hash(psk)
 
             if hashed_psk != Permissions.PRE_SHARED_KEY:
                 self._send_auth_invalid()
                 return
         if "token-key" in body:
             key = body["token-key"]
-            hashed_key = hashlib.sha256(key.encode('utf-8')).hexdigest()
+            hashed_key = Security.password_hash(key)
 
             if hashed_key != Permissions.TOKEN_KEY:
                 self._send_auth_invalid()

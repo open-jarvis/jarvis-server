@@ -2,9 +2,8 @@
 # Copyright (c) 2020 by Philipp Scheer. All Rights Reserved.
 #
 
-from jarvis import SetupTools, Config, Colors, Database
+from jarvis import SetupTools, Config, Colors, Database, Security
 from getpass import getpass
-import hashlib
 import os
 import sys
 
@@ -17,8 +16,9 @@ USR = os.getlogin()
 DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-[Database().table(x) for x in ["devices", "applications", "logs",
+[Database().table(x) for x in ["devices", "applications", "logs", "analytics", "users", "skills",
                                "instants", "tokens", "config", "brain"]]
+Database().table("users").insert({"username": "jarvis", "password": Security.password_hash("jarvis")})
 cnf = Config()
 
 
@@ -114,8 +114,8 @@ def ask_and_store_credentials():
     tk = getpass("       Token key : ")
 
     # NOTE: maybe switch to sha512 -> slower but more secure
-    cnf.set("pre-shared-key", hashlib.sha256(psk.encode('utf-8')).hexdigest())
-    cnf.set("token-key", hashlib.sha256(tk.encode('utf-8')).hexdigest())
+    cnf.set("pre-shared-key", Security.password_hash(psk))
+    cnf.set("token-key", Security.password_hash(tk))
 
 
 if "-c" in sys.argv or "--credentials" in sys.argv:

@@ -20,6 +20,7 @@ Jarvis backend and which handles incoming data from mobile phones and smart devi
 sudo apt update
 sudo apt upgrade -y
 sudo apt install -y git python3 python3-pip
+sudo -H pip3 install --upgrade open-jarvis
 ```
 
 #### Install the Database
@@ -45,11 +46,8 @@ sudo mkdir $COUCHDB_DIR/logs
 sudo touch $COUCHDB_DIR/logs/stdout.log
 sudo touch $COUCHDB_DIR/logs/stderr.log
 
-# install pip packages
-sudo pip3 install --upgrade couchdb2
-
 # install service file
-sudo wget https://raw.githubusercontent.com/open-jarvis/jarvis/master/web/scripts/couchdb.service -q -O /etc/systemd/system/couchdb.service 
+sudo wget https://raw.githubusercontent.com/open-jarvis/jarvis/master/web/scripts/couchdb.service -q -O /etc/systemd/system/couchdb.service
 
 # Get source - need URL for mirror (see post instructions, above)
 wget https://mirror.klaus-uwe.me/apache/couchdb/source/3.1.1/apache-couchdb-3.1.1.tar.gz
@@ -84,13 +82,11 @@ sudo systemctl start couchdb.service
 #### Install the Jarvis Code
 
 ``` bash
-sudo pip3 install --upgrade open-jarvis
+git clone https://github.com/open-jarvis/server
 
-git clone https://github.com/open-jarvis/jarvis-server
-
-sudo python3 jarvis-server/setup.py
-# launch installer script
-# and follow the instructions
+cd server
+sudo python3 setup.py
+# Follow the instructions
 ```
 
 ### Ubuntu

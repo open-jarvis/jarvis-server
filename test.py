@@ -28,7 +28,7 @@ def test_db_connection():
 
 
 def test_api_functions():
-    from classes import API
+    from core import API
     x, token = API.generate_token({"permission-level": 4})
     print("generate_token", (x, token))
     print("register_device", API.register_device(

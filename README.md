@@ -77,6 +77,9 @@ sleep 20
 sudo systemctl daemon-reload
 sudo systemctl enable couchdb.service
 sudo systemctl start couchdb.service
+
+# install NLU
+sudo -H pip3 install snips-nlu
 ```
 
 #### Install the Jarvis Code

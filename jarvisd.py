@@ -9,6 +9,7 @@ from jarvis import Logger, Exiter, ProcessPool
 import core.MQTTServer as MQTTServer
 import core.HTTPServer as HTTPServer
 import satellite.DatabaseAnalytics as DatabaseAnalytics
+import satellite.NLU as NLU
 
 # initiate logger
 logger = Logger("jarvisd")
@@ -20,6 +21,7 @@ ppool = ProcessPool(logger)
 ppool.register(HTTPServer.start_server, "http api server")
 ppool.register(MQTTServer.start_server, "mqtt api server")
 ppool.register(DatabaseAnalytics.start_analysis, "database analytics")
+ppool.register(NLU.start_server, "nlu server analytics")
 
 
 try:

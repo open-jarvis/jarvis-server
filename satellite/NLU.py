@@ -12,7 +12,6 @@ import snips_nlu
 
 logger = Logger("nlu")
 nlu_engine = snips_nlu.SnipsNLUEngine()
-currently_training = False
 
 QUERY_TIME = 10
 STATISTICS = {
@@ -181,27 +180,33 @@ def save_assistant_data(data):
 
 def parse_nlu_model(utterance):
     global nlu_engine, logger, STATISTICS
-    logger.i("parsing", f"parsing '{utterance}'")
-    start = time.time()
-    result = nlu_engine.parse(text=utterance)
-    took = time.time() - start
-    logger.i("parse", f"parsed '{utterance}', result: '{json.dumps(result)}'")
-    STATISTICS["total-time"]["parsing"] += took
-    STATISTICS["count"]["parsing"] += 1
-    STATISTICS["avg-time"]["parsing"] = STATISTICS["total-time"]["parsing"] / STATISTICS["count"]["parsing"]
-    return result
+    try:
+        if not STATISTICS["trained"]:
+            raise Exception("NLU Engine not fitted!")
+        if STATISTICS["training"]:
+            raise Exception("NLU Engine currently training...")
+        logger.i("parsing", f"parsing '{utterance}'")
+        start = time.time()
+        result = nlu_engine.parse(text=utterance)
+        took = time.time() - start
+        logger.i("parse", f"parsed '{utterance}', result: '{json.dumps(result)}'")
+        STATISTICS["total-time"]["parsing"] += took
+        STATISTICS["count"]["parsing"] += 1
+        STATISTICS["avg-time"]["parsing"] = STATISTICS["total-time"]["parsing"] / STATISTICS["count"]["parsing"]
+        return result
+    except Exception:
+        logger.e("parse", "failed to parse utterance on nlu model", traceback.format_exc())
+        return {"nlu": False}
 
 def train_nlu_model(data):
-    global nlu_engine, logger, currently_training, STATISTICS
-    currently_training = True
+    global nlu_engine, logger, STATISTICS
     STATISTICS["training"] = True
     logger.i("training", f"starting nlu model training")
     start = time.time()
     nlu_engine.fit(dataset=data, force_retrain=True)
     took = time.time() - start
     logger.i("training", f"took {took:.1f}s to train nlu model")
-    currently_training = False
-    STATISTICS["trained"] = True
+    STATISTICS["trained"] = nlu_engine.fitted
     STATISTICS["training"] = False
     STATISTICS["total-time"]["training"] += took
     STATISTICS["count"]["training"] += 1

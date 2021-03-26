@@ -42,6 +42,7 @@ def start_server():
     """
     global logger
     start_training_server()
+    start_status_server()
     # try to get data from database
     assistant_data = get_assistant_data()
     # train nlu model
@@ -136,7 +137,7 @@ def start_status_server():
         except Exception:
             logger.e("training", "failed to insert data into database", traceback.format_exc())
             if "reply-to" in data:
-                mqtt_status_server.publish(data["reply-to"], json.dumps({"success": False}))
+                mqtt_status_server.publish("jarvis/errors", json.dumps({"endpoint": "jarvis/satellite/nlu/status"}))
 
     mqtt_status_server = MQTT(client_id="nlu-status-server")
     mqtt_status_server.on_message(_on_NLU_STATUS)

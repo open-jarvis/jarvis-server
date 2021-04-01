@@ -20,7 +20,7 @@ Jarvis backend and which handles incoming data from mobile phones and smart devi
 sudo apt update
 sudo apt upgrade -y
 sudo apt install -y git python3 python3-pip
-sudo -H pip3 install --upgrade open-jarvis
+sudo -H pip3 install --upgrade open-jarvis pyOpenSSL
 ```
 
 #### Install the Database
@@ -122,7 +122,7 @@ docker run \
 #### Install the Jarvis code
 ```bash
 sudo apt install -y mosquitto python3-paho-mqtt
-sudo -H pip3 install --upgrade open-jarvis
+sudo -H pip3 install --upgrade open-jarvis pyOpenSSL
 git clone https://github.com/open-jarvis/server
 cd server
 sudo python3 setup.py

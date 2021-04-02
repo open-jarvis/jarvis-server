@@ -6,7 +6,7 @@ import time
 import json
 import traceback
 from jarvis import MQTT, Exiter, Logger
-import classes.API as API
+import core.API as API
 
 ms = None
 logger = None

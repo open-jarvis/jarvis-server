@@ -2,9 +2,8 @@
 # Copyright (c) 2020 by Philipp Scheer. All Rights Reserved.
 #
 
-from jarvis import SetupTools, Config, Colors, Database
+from jarvis import SetupTools, Config, Colors, Database, Security
 from getpass import getpass
-import hashlib
 import os
 import sys
 
@@ -13,12 +12,16 @@ ROOT_DIR = "/jarvis"
 LOC = f"{ROOT_DIR}/server"
 APP_DIR = f"{ROOT_DIR}/apps"
 WEB_DIR = f"{ROOT_DIR}/web"
-USR = os.getlogin()
+try:
+    USR = os.getlogin()
+except Exception: # docker container
+    USR = "root"
 DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-[Database().table(x) for x in ["devices", "applications", "logs",
+[Database().table(x) for x in ["devices", "applications", "logs", "analytics", "users", "skills",
                                "instants", "tokens", "config", "brain"]]
+Database().table("users").insert({"username": "jarvis", "password": Security.password_hash("jarvis")})
 cnf = Config()
 
 
@@ -69,19 +72,22 @@ def install():
     SetupTools.do_action("installing service files",
                          f"sudo cp -v {DIR}/system/*.service /etc/systemd/system/")
     SetupTools.do_action("reloading systemd daemon",
-                         "sudo systemctl daemon-reload")
+                         "sudo systemctl daemon-reload", exit_on_fail=False)
+
+    SetupTools.do_action("installing service files",
+                         f"sudo cp -v {DIR}/system/*.service /etc/init.d/", exit_on_fail=False)
     SetupTools.do_action("installing jarvisd executable",
-                         f"sudo cp -v {DIR}/system/jarvis /usr/bin/jarvis")
+                         f"sudo cp -v {DIR}/system/jarvis /usr/bin/jarvis", exit_on_fail=False)
     SetupTools.do_action(
-        "changing jarvisd executable permissions", "sudo chmod 777 /usr/bin/jarvis")
+        "changing jarvisd executable permissions", "sudo chmod 777 /usr/bin/jarvis", exit_on_fail=False)
     SetupTools.do_action(
         f"changing ownership of directory (to {USR})", f"sudo chown -R {USR}: {ROOT_DIR}")
     SetupTools.do_action(f"copying api documentation to {LOC}/apidoc",
-                         f"git clone https://github.com/open-jarvis/open-jarvis.github.io {LOC}/apidoc")
+                         f"git clone https://github.com/open-jarvis/open-jarvis.github.io {LOC}/apidoc", exit_on_fail=False)
 
     # start jarvis
     SetupTools.do_action("starting and enabling jarvisd service",
-                         "sudo systemctl start jarvisd.service ; sudo systemctl enable jarvisd.service")
+                         "sudo systemctl start jarvisd.service ; sudo systemctl enable jarvisd.service", exit_on_fail=False)
 
     # clean up
     SetupTools.do_action(
@@ -114,8 +120,8 @@ def ask_and_store_credentials():
     tk = getpass("       Token key : ")
 
     # NOTE: maybe switch to sha512 -> slower but more secure
-    cnf.set("pre-shared-key", hashlib.sha256(psk.encode('utf-8')).hexdigest())
-    cnf.set("token-key", hashlib.sha256(tk.encode('utf-8')).hexdigest())
+    cnf.set("pre-shared-key", Security.password_hash(psk))
+    cnf.set("token-key", Security.password_hash(tk))
 
 
 if "-c" in sys.argv or "--credentials" in sys.argv:

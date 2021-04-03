@@ -23,8 +23,9 @@ logger = Logger("permissions")
 PRE_SHARED_KEY = cnf.get("pre-shared-key", None)
 TOKEN_KEY = cnf.get("token-key", None)
 if PRE_SHARED_KEY is None or TOKEN_KEY is None:
-    logger.e("api-keys", "jarvis api keys not configured", "")
-    exit(1)
+    cnf.set("pre-shared-key", "jarvis")
+    cnf.set("token-key", "jarvis")
+    logger.w("api-keys", "jarvis api keys not configured, set to default")
 
 
 DIRECTORY = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/..")

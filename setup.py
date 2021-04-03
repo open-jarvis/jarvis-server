@@ -2,10 +2,17 @@
 # Copyright (c) 2020 by Philipp Scheer. All Rights Reserved.
 #
 
-from jarvis import SetupTools, Config, Colors, Database, Security
-from getpass import getpass
 import os
 import sys
+import argparse
+from jarvis import SetupTools, Config, Colors, Database, Security
+from getpass import getpass
+
+
+parser = argparse.ArgumentParser(description='Jarvis Setup Script')
+parser.add_argument("-b", "--blind", default=False, action="store_true", help="Do not ask for installation directory, and use default values (best for non-user interactive scripts)")
+parser.add_argument("-c", "--credentials", default=False, action="store_true", help="Only ask for pre-shared-key and token-key credentials, then exit")
+args = parser.parse_args()
 
 
 ROOT_DIR = "/jarvis"
@@ -26,11 +33,11 @@ cnf = Config()
 
 
 def install():
-    global cnf, ROOT_DIR, LOC, APP_DIR, WEB_DIR, USR, DIR
+    global args, cnf, ROOT_DIR, LOC, APP_DIR, WEB_DIR, USR, DIR
 
     SetupTools.check_python_version(3)
     SetupTools.check_root()
-    if "--no-input" not in sys.argv:
+    if not args.blind:
         ROOT_DIR = SetupTools.get_default_installation_dir(ROOT_DIR)
         LOC = f"{ROOT_DIR}/server"
         APP_DIR = f"{ROOT_DIR}/apps"
@@ -40,9 +47,13 @@ def install():
         if cnf.get("pre-shared-key", None) is None or cnf.get("token-key", None) is None:
             ask_and_store_credentials()
 
+        if args.credentials:
+            exit(0)
+
     if cnf.get("pre-shared-key", None) is None or cnf.get("token-key", None) is None:
-        print(f"{Colors.RED}No Pre-Shared key or Token key stored yet{Colors.END}")
-        exit(1)
+        print(f"{Colors.RED}No Pre-Shared key or Token key stored yet, setting default{Colors.END}")
+        cnf.set("pre-shared-key", "jarvis")
+        cnf.set("token-key", "jarvis")
 
     cnf.set("directories", {
         "root": ROOT_DIR,
@@ -124,11 +135,7 @@ def ask_and_store_credentials():
     cnf.set("token-key", Security.password_hash(tk))
 
 
-if "-c" in sys.argv or "--credentials" in sys.argv:
+if args.credentials:
     ask_and_store_credentials()
     exit(0)
-if "-h" in sys.argv or "--help" in sys.argv:
-    print("Usage: python3 setup.py [-h | --help] [-c | --credentials]")
-    exit(0)
-else:
-    install()
+install()

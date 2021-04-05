@@ -13,6 +13,7 @@ import core.MQTTServer as MQTTServer
 import core.HTTPServer as HTTPServer
 import satellite.DatabaseAnalytics as DatabaseAnalytics
 import satellite.NLU as NLU
+import satellite.AutoUpdate as AutoUpdate
 
 # initiate logger
 logger = Logger("jarvisd")
@@ -25,6 +26,7 @@ ppool.register(HTTPServer.start_server, "http api server")
 ppool.register(MQTTServer.start_server, "mqtt api server")
 ppool.register(DatabaseAnalytics.start_analysis, "database analytics")
 ppool.register(NLU.start_server, "nlu server")
+ppool.register(AutoUpdate.update_checker, "autoupdate")
 
 
 # restart listener

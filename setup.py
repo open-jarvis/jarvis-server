@@ -16,9 +16,6 @@ args = parser.parse_args()
 
 
 ROOT_DIR = "/jarvis"
-LOC = f"{ROOT_DIR}/server"
-APP_DIR = f"{ROOT_DIR}/apps"
-WEB_DIR = f"{ROOT_DIR}/web"
 try:
     USR = os.getlogin()
 except Exception: # docker container
@@ -33,15 +30,12 @@ cnf = Config()
 
 
 def install():
-    global args, cnf, ROOT_DIR, LOC, APP_DIR, WEB_DIR, USR, DIR
+    global args, cnf, ROOT_DIR
 
     SetupTools.check_python_version(3)
     SetupTools.check_root()
     if not args.blind:
         ROOT_DIR = SetupTools.get_default_installation_dir(ROOT_DIR)
-        LOC = f"{ROOT_DIR}/server"
-        APP_DIR = f"{ROOT_DIR}/apps"
-        WEB_DIR = f"{ROOT_DIR}/web"
         USR = SetupTools.get_default_user(USR)
 
         if cnf.get("pre-shared-key", None) is None or cnf.get("token-key", None) is None:
@@ -49,6 +43,14 @@ def install():
 
         if args.credentials:
             exit(0)
+
+
+    LOC = f"{ROOT_DIR}/server"
+    APP_DIR = f"{ROOT_DIR}/apps"
+    WEB_DIR = f"{ROOT_DIR}/web"
+    UPDATE_DIR = f"{ROOT_DIR}/autoupdate"
+    DOWNLOADS_DIR = f"{ROOT_DIR}/downloads"
+
 
     if cnf.get("pre-shared-key", None) is None or cnf.get("token-key", None) is None:
         print(f"{Colors.RED}No Pre-Shared key or Token key stored yet, setting default{Colors.END}")
@@ -59,7 +61,9 @@ def install():
         "root": ROOT_DIR,
         "server": LOC,
         "apps": APP_DIR,
-        "web": WEB_DIR
+        "web": WEB_DIR,
+        "autoupdate": UPDATE_DIR,
+        "downloads": DOWNLOADS_DIR
     })
     cnf.set("install-user", USR)
 

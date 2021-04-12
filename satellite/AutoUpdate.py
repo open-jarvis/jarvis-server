@@ -21,10 +21,10 @@ cnf = Config()
 
 # initially set data server
 if cnf.get("update-server", None) is None:
-    cnf.set("update-server", "data.jarvis.philippscheer.com")
+    cnf.set("update-server", "jarvisdata.philippscheer.com")
 
 # define constants
-DATASERVER = cnf.get("update-server", "data.jarvis.philippscheer.com")
+DATASERVER = cnf.get("update-server", "jarvisdata.philippscheer.com")
 TO_CHECK = [
     # ACTION:       if below                        >   this                            ;  then download this                               ; and install here      ; automatically install?
     [  f"http://{DATASERVER}/web/version"           ,   "/jarvis/web/version"           ,  f"http://{DATASERVER}/web-latest.tar.gz"         , "/jarvis/web"         , False ],
@@ -76,16 +76,10 @@ def installation_pending():
 
 
 
+"""
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
 #@        MQTT SPECIFICATIONS        @
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-"""
-Published MQTT messages:
-jarvis/update/status
-    -> { type: available                              ,  version: { current: 0.0.1, remote: 0.0.2 } }
-    -> { type: download,      action: start|finished  ,  version: { current: 0.0.1, remote: 0.0.2 } }
-    -> { type: installation,  action: start|finished  ,  version: { current: 0.0.1, remote: 0.0.2 } }}
-
 Listening to MQTT messages:
 jarvis/update/poll          !!! NEED REPLY TO  !!!
     -> { success: true|false  , ?error = "No internet connection! "}
@@ -139,7 +133,6 @@ def _on_REQUEST(client: object, userdata: object, message: object):
         logger.e("on-mqtt", "an error occured while handling an mqtt endpoint, see traceback", traceback.format_exc())
 
 
-# DO NOT MOVE THIS ON TOPC OR SPLIT INTO FUNCTIONS, IT WON'T WORK
 mqtt = MQTT(client_id="updater")
 mqtt.on_message(_on_REQUEST)
 mqtt.subscribe("jarvis/update/#")
@@ -187,13 +180,14 @@ def update_checker():
         while Exiter.running:
             poll()
             for i in range(POLL_INTERVAL):
+                if not Exiter.running:
+                    break
                 time.sleep(0.95)
         logger.i("shutdown", "shutting down autoupdate server")
     except Exception as e:
         logger.e("mainloop", f"an exception occured, next try in {POLL_INTERVAL // 1.5}s, see traceback", traceback.format_exc())
         for i in range(int((POLL_INTERVAL // 1.5) * 2)):
-            if Exiter.running:
-                time.sleep(0.49)
-            else:
+            if not Exiter.running:
                 return
+            time.sleep(0.49)
         update_checker()

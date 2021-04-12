@@ -6,10 +6,13 @@ Copyright (c) 2021 Philipp Scheer
 import os
 import sys
 import time
+import shutil
 
 
-FILE = open(f"{os.path.dirname(os.path.abspath(sys.argv[0]))}/../logs/trace.log", "a+")
-ONLY_JARVIS = True
+FILENAME = f"{os.path.dirname(os.path.abspath(sys.argv[0]))}/../logs/trace.log"   # specify trace file
+FILE = open(FILENAME, "a+")   # open trace file
+MAX_ALLOWED_FILE_SIZE = 1024 * 1024 * 100   # in bytes, so 100 MB
+ONLY_JARVIS = True   # only trace jarvis functions and files
 
 
 def tracer(frame, event, arg):
@@ -42,5 +45,7 @@ def tracer(frame, event, arg):
     return
 
 def insert_trace(*args):
-    global FILE
+    global FILE, FILENAME, MAX_ALLOWED_FILE_SIZE
     FILE.write(f"{int(time.time())}::{'::'.join([str(i) for i in args])}\n")
+    if os.path.getsize(FILENAME) > MAX_ALLOWED_FILE_SIZE:
+        shutil.make_archive(FILENAME + "." + str(int(time.time())), "gztar", FILENAME, ".")

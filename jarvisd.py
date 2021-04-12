@@ -84,12 +84,6 @@ try:
     
     # exiting
     logger.i("exiting", f"caught exit signal, exiting")
-    
-    # check which threads are still running
-    while True:
-        for t in tpool.threads:
-            print(t.name, t.is_alive())
-        time.sleep(1)
 except Exception:
     logger.e("stopping", f"caught exception in infinite loop, stopping all subprocesses", traceback.format_exc())
 

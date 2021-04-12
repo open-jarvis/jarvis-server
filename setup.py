@@ -30,7 +30,7 @@ cnf = Config()
 
 
 def install():
-    global args, cnf, ROOT_DIR
+    global args, cnf, ROOT_DIR, USR
 
     SetupTools.check_python_version(3)
     SetupTools.check_root()

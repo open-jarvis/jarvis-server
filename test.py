@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+
+import sys
 import time
 from jarvis import Database
 
@@ -162,3 +164,55 @@ def test_performance():
     print(
         f"couchdb: took {took}s to make {count} inserts ({count/took} insr/sec)")
     
+
+import random
+import traceback
+import paho.mqtt.client as pahomqtt
+from jarvis import MQTT, ProcessPool, ThreadPool
+
+
+def background_thread_jarvis():
+    print("+ BACKGROUND THREAD MQTT JARVIS STARTED")
+    try:
+        c = MQTT('jarvis|' + ''.join(random.choices("0123456abcdef", k=16)))
+        while True:
+            c.publish("test/topic", "hello:" + str(time.time()))
+            time.sleep(1)
+    except Exception:
+        print(traceback.format_exc())
+
+
+def background_mqtt_jarvis():
+    print("+ BACKGROUND MQTT JARVIS STARTED")
+    try:
+        c = MQTT('jarvis|' + ''.join(random.choices("0123456abcdef", k=16)))
+        while True:
+            c.publish("test/topic", "hello:" + str(time.time()))
+            time.sleep(1)
+    except Exception:
+        print(traceback.format_exc())
+
+
+def background_mqtt_native():
+    print("+ BACKGROUND MQTT NATIVE STARTED")
+    try:
+        c = pahomqtt.Client('jarvis|' + ''.join(random.choices("0123456abcdef", k=16)))
+        c.connect("127.0.0.1")
+        while True:
+            c.publish("test/topic", "hello:" + str(time.time()))
+            time.sleep(1)
+    except Exception:
+        print(traceback.format_exc())
+
+
+if "-v1" in sys.argv:   # DOES NOT WORK
+    p = ProcessPool()
+    p.register(background_mqtt_jarvis, "JARVIS MQTT")
+
+if "-v2" in sys.argv:   # WORKS
+    p = ProcessPool()
+    p.register(background_mqtt_native, "NATIVE MQTT")
+
+if "-v3" in sys.argv:
+    t = ThreadPool()
+    t.register(background_thread_jarvis, "JARVIS THREADING MQTT")

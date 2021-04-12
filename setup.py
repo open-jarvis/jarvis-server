@@ -48,7 +48,6 @@ def install():
     LOC = f"{ROOT_DIR}/server"
     APP_DIR = f"{ROOT_DIR}/apps"
     WEB_DIR = f"{ROOT_DIR}/web"
-    UPDATE_DIR = f"{ROOT_DIR}/autoupdate"
     DOWNLOADS_DIR = f"{ROOT_DIR}/downloads"
 
 
@@ -62,7 +61,6 @@ def install():
         "server": LOC,
         "apps": APP_DIR,
         "web": WEB_DIR,
-        "autoupdate": UPDATE_DIR,
         "downloads": DOWNLOADS_DIR
     })
     cnf.set("install-user", USR)

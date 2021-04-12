@@ -2,12 +2,27 @@
 # Copyright (c) 2020 by Philipp Scheer. All Rights Reserved.
 #
 
-from jarvis import Database, Exiter
 import time
+from jarvis import Database, Exiter
+
+
+POLL_INTERVAL = 60 * 15     # poll every 15 minutes
 
 
 def start_analysis():
-    while Exiter.running:
+    try:
+        analytics_loop()
+    except Exception:
+        start_analysis()
+
+def analytics_loop():
+    global POLL_INTERVAL
+    for i in range(POLL_INTERVAL * 2):
+        if Exiter.running:
+            time.sleep(0.49)
+        else: 
+            return
+        continue
         stats = Database().stats
         formatted_stats = {}
         formatted_stats["reads"] = stats["couchdb"]["database_reads"]["value"]
@@ -24,4 +39,6 @@ def start_analysis():
             "stats": formatted_stats
         })
 
-        time.sleep(60 * 15)
+        for i in range(POLL_INTERVAL * 2):
+            if Exiter.running:
+                time.sleep(0.49)

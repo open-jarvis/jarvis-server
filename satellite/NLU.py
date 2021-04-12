@@ -7,11 +7,17 @@ import time
 import json
 import traceback
 from jarvis import Database, MQTT, Logger
+from jarvis.Exiter import Exiter
+from paho.mqtt.client import MQTT_CLEAN_START_FIRST_ONLY
 import snips_nlu
 
 
+mqtt_training_server = MQTT(client_id="nlu-training-server")
+mqtt_nlu_server = MQTT(client_id="nlu-server")
+mqtt_status_server = MQTT(client_id="nlu-status-server")
 logger = Logger("nlu")
 nlu_engine = snips_nlu.SnipsNLUEngine()
+
 
 QUERY_TIME = 10
 STATISTICS = {
@@ -50,8 +56,11 @@ def start_server():
     # how to handle nlu utterance requests
     start_parsing_server()
     # start mainloop
-    while True:
+    while Exiter.running:
         time.sleep(1)
+    logger.i("shutdown", "shutting down nlu servers")
+    return
+
 
 def start_training_server():
     """
@@ -60,6 +69,7 @@ def start_training_server():
                                             "reply-to": ... temporary mqtt reply to channel ... }
     If it receives a valid message, train the NLU engine and save both the trained model and training data into the database
     """
+    global mqtt_training_server
     def _on_NLU_TRAINING(c, ud, msg):
         global logger
         try:
@@ -78,9 +88,9 @@ def start_training_server():
             if "reply-to" in data:
                 mqtt_training_server.publish(data["reply-to"], json.dumps({"success": False}))
             logger.e("train", f"failed to train data '{json.dumps(nlu_data)}'", traceback.format_exc())
-    mqtt_training_server = MQTT(client_id="nlu-training-server")
     mqtt_training_server.subscribe("jarvis/satellite/nlu/train")
     mqtt_training_server.on_message(_on_NLU_TRAINING)
+
 
 def start_parsing_server():
     """
@@ -89,6 +99,7 @@ def start_parsing_server():
                                             reply-to: "... temporary mqtt reply channel ..." }
     Returns the parsing result
     """
+    global mqtt_nlu_server
     def _on_NLU_UTTERANCE(c, ud, msg):
         global logger
         try:
@@ -102,10 +113,9 @@ def start_parsing_server():
             logger.e("parse", "failed to parse data, maybe model is not trained yet...")
             if "reply-to" in data:
                 mqtt_nlu_server.publish(data["reply-to"], json.dumps({"success": False}))
-    
-    mqtt_nlu_server = MQTT(client_id="nlu-server")
     mqtt_nlu_server.on_message(_on_NLU_UTTERANCE)
     mqtt_nlu_server.subscribe("jarvis/satellite/nlu/parse")
+
 
 def start_status_server():
     """
@@ -127,6 +137,7 @@ def start_status_server():
                             } 
                         }
     """
+    global mqtt_status_server
     def _on_NLU_STATUS(c, ud, msg):
         global logger, STATISTICS
         try:
@@ -137,10 +148,9 @@ def start_status_server():
             logger.e("training", "failed to insert data into database", traceback.format_exc())
             if "reply-to" in data:
                 mqtt_status_server.publish("jarvis/errors", json.dumps({"endpoint": "jarvis/satellite/nlu/status"}))
-
-    mqtt_status_server = MQTT(client_id="nlu-status-server")
     mqtt_status_server.on_message(_on_NLU_STATUS)
     mqtt_status_server.subscribe("jarvis/satellite/nlu/status")
+
 
 
 def get_assistant_data():
@@ -160,6 +170,7 @@ def get_assistant_data():
         assistant_data = _get_assistant_data()
     return assistant_data
 
+
 def save_assistant_data(data):
     assistant_table = Database().table("assistant")
     res = assistant_table.filter(lambda x: "nlu-data" in x)
@@ -176,6 +187,7 @@ def save_assistant_data(data):
     else:
         data["created-at"] = int(time.time())
         assistant_table.insert(data)
+
 
 
 def parse_nlu_model(utterance):
@@ -197,6 +209,7 @@ def parse_nlu_model(utterance):
     except Exception:
         logger.e("parse", "failed to parse utterance on nlu model", traceback.format_exc())
         return {"nlu": False}
+
 
 def train_nlu_model(data):
     global nlu_engine, logger, STATISTICS

@@ -18,25 +18,28 @@ import urllib.parse as urlparse
 DIRECTORY = os.path.abspath(os.path.dirname(sys.argv[0]))
 logger = Logger("http-api")
 logger.console_on()
-
+server = None
 
 def start_server():
     """
     Starts a JarvisWebServer instance which handles outside API requests
     """
-    global logger
+    global logger, server
     try:
         logger.i("start", "starting http api server")
         server = HTTPServer(('', 2021), JarvisWebServer)
         server.serve_forever()
     except OSError:
-        logger.e("server", f"another jarvis instance is already running",
-                 traceback.format_exc())
-        exit(1)
+        logger.e("server", f"another jarvis instance is already running", traceback.format_exc())
     except Exception as e:
-        logger.e("server", f"unknown exception while starting jarvis http server",
-                 traceback.format_exc())
-        exit(1)
+        logger.e("server", f"unknown exception while starting jarvis http server", traceback.format_exc())
+
+def stop_server():
+    global logger, server
+    logger.i("shutdown", "stopping http api server")
+    server.shutdown()
+
+Exiter(stop_server)
 
 
 class JarvisWebServer(BaseHTTPRequestHandler):
@@ -197,17 +200,6 @@ class JarvisWebServer(BaseHTTPRequestHandler):
         Disable default module logging
         """
         return
-
-
-# exiter function
-def on_exit():
-    """
-    If the parent script gets terminated, also shut down this script
-    """
-    logger.i("shutdown", "shutting down")
-
-
-Exiter(on_exit)
 
 
 # helper function

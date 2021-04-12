@@ -19,8 +19,11 @@ class MQTTServer:
         self.mqtt.subscribe("jarvis/api/#")
 
     def start_mainloop(self):
+        global logger
         while Exiter.running:
             time.sleep(1)
+        logger.i("shutdown", "shutting down mqtt server")
+        
 
 
 def on_message(c, ud, msg):

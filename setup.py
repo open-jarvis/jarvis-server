@@ -49,6 +49,7 @@ def install():
     APP_DIR = f"{ROOT_DIR}/apps"
     WEB_DIR = f"{ROOT_DIR}/web"
     DOWNLOADS_DIR = f"{ROOT_DIR}/downloads"
+    LOGS_DIR = f"{ROOT_DIR}/logs"
 
 
     if cnf.get("pre-shared-key", None) is None or cnf.get("token-key", None) is None:
@@ -66,7 +67,7 @@ def install():
     cnf.set("install-user", USR)
 
     # create directories
-    for d in [LOC, APP_DIR, WEB_DIR, f"{LOC}/logs"]:
+    for d in [LOC, APP_DIR, WEB_DIR, f"{LOC}/logs", LOGS_DIR]:
         if not os.path.isdir(d):
             os.makedirs(d)
 

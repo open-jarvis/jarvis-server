@@ -8,7 +8,6 @@ import json
 import traceback
 from jarvis import Database, MQTT, Logger
 from jarvis.Exiter import Exiter
-from paho.mqtt.client import MQTT_CLEAN_START_FIRST_ONLY
 import snips_nlu
 
 

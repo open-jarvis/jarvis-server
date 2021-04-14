@@ -29,13 +29,12 @@ TO_CHECK = [
     # ACTION:       if below                        >   this                            ;  then download this                               ; and install here      ; automatically install?
     [  f"http://{DATASERVER}/web/version"           ,   "/jarvis/web/version"           ,  f"http://{DATASERVER}/web-latest.tar.gz"         , "/jarvis/web"         , False ],
     [  f"http://{DATASERVER}/server/version"        ,   "/jarvis/server/version"        ,  f"http://{DATASERVER}/server-latest.tar.gz"      , "/jarvis/server"      , False ],
-    [  f"http://{DATASERVER}/autoupdate/version"    ,   "/jarvis/autoupdate/version"    ,  f"http://{DATASERVER}/autoupdate-latest.tar.gz"  , "/jarvis/autoupdate"  , True  ]
 ]
+
 
 DOWNLOADS_FOLDER = "/jarvis/downloads"
 POLL_INTERVAL = 60 * 60 * 1 # CHECK EVERY HOUR FOR UPDATE
 CURRENT_ACTION = "idle"
-
 
 
 # helper functions
@@ -48,7 +47,7 @@ def install_downloaded_archive(downloaded_archive, local_installation_path):
 def store(url, path):
     r = requests.get(url)
     size = len(r.content)
-    with open(path, 'wb') as f:
+    with open(path, "wb") as f:
         f.write(r.content)
     return size
 

@@ -24,13 +24,17 @@ VERSION_NAMES = {
     "0.0.1": "Alpine Beta",
     "0.0.2": "Alpine"
 }
-UPDATE_REPOS = [ "server", "web" ]
-CURRENT_ACTION = "idle"
+UPDATE_REPOS     = [ "server", "web" ]
+CURRENT_ACTION   = "idle"
 DOWNLOADS_FOLDER = "/jarvis/downloads"
-POLL_INTERVAL = 60 * 60 * 1 # CHECK EVERY HOUR FOR UPDATE
-SERVER = cnf.get("update-server", "jarvisdata.philippscheer.com")
-ROOT_DIR = cnf.get("directories", {"root": "/jarvis"})["root"]
+POLL_INTERVAL    = 60 * 60 * 1 # CHECK EVERY HOUR FOR UPDATE
+SERVER           = cnf.get("update-server", "jarvisdata.philippscheer.com")
+ROOT_DIR         = cnf.get("directories", {"root": "/jarvis"})["root"]
+PROTOCOL         = "https"
+SUFFIX           = "-latest.tar.gz"
 
+download_pending = False
+installation_pending = False
 
 # helper functions
 def install_downloaded_archive(downloaded_archive, local_installation_path):
@@ -48,10 +52,10 @@ def store(url, path):
 
 
 def update_size():
-    global TO_CHECK
+    global UPDATE_REPOS, PROTOCOL
     total_size = 0
-    for el in TO_CHECK:
-        total_size += int(requests.head(el[2]).headers["content-length"])
+    for repo in UPDATE_REPOS:
+        total_size += int(requests.head(f"{PROTOCOL}://{SERVER}/{repo}{SUFFIX}").headers["content-length"])
     return total_size
 
 
@@ -69,26 +73,9 @@ def get_update_notes(remote_url, local_url):
     return (rmt, lcl)
 
 
-def download_pending():
-    global TO_CHECK
-    for el in TO_CHECK:
-        remote, local = check_versions(el[0], el[1])
-        if remote > local:
-            return True
-    return False
-
-
-def installation_pending():
-    global DOWNLOADS_FOLDER
-    for fname in os.listdir(DOWNLOADS_FOLDER):
-        if fname.startswith("server-latest") or fname.startswith("web-latest"):
-            return True
-    return False
-
-
 def _on_REQUEST(client: object, userdata: object, message: object):
     try:
-        global CURRENT_ACTION, TO_CHECK, logger, mqtt
+        global CURRENT_ACTION, UPDATE_REPOS, logger, mqtt
         topic = message.topic
         data = json.loads(message.payload.decode())
         action = topic.split("/")[-1]
@@ -119,7 +106,8 @@ def _on_REQUEST(client: object, userdata: object, message: object):
             del result["success"]
             result["current-action"] = CURRENT_ACTION
             result["available"] = { "download": None, "install": None }
-            remote, local = check_versions(TO_CHECK[0][0], TO_CHECK[0][1])
+            versions = cnf.get("version", {"remote": "0.0.0", "local": "0.0.0"})
+            remote, local = versions["remote"], versions["remote"]
             if download_pending():
                 result["available"]["download"] = { "remote": str(remote), "local": str(local) }
             if installation_pending():

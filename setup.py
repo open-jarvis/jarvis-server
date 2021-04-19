@@ -67,7 +67,7 @@ def install():
     cnf.set("install-user", USR)
 
     # create directories
-    for d in [LOC, APP_DIR, WEB_DIR, f"{LOC}/logs", LOGS_DIR]:
+    for d in [LOC, APP_DIR, WEB_DIR, f"{LOC}/logs", LOGS_DIR, DOWNLOADS_DIR]:
         if not os.path.isdir(d):
             os.makedirs(d)
 

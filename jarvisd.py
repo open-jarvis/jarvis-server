@@ -63,7 +63,10 @@ def _on_MSG(a, b, msg):
         if msg.topic == "jarvis/backend/status":
             data = json.loads(msg.payload.decode())
             if "reply-to" in data:
-                mqtt.publish(data["reply-to"], json.dumps({"status": "up"}))
+                result = {}
+                for t in tpool.threads:
+                    result[t.name] = t.is_alive()
+                mqtt.publish(data["reply-to"], json.dumps({"status": "up", "threads": result}))
     except Exception:
         logger.e("jarvis-mqtt", "error in main mqtt endpoint, see traceback", traceback.format_exc())
 mqtt.on_message(_on_MSG)

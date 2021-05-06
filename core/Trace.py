@@ -48,4 +48,5 @@ def insert_trace(*args):
     global FILE, FILENAME, MAX_ALLOWED_FILE_SIZE
     FILE.write(f"{int(time.time())}::{'::'.join([str(i) for i in args])}\n")
     if os.path.getsize(FILENAME) > MAX_ALLOWED_FILE_SIZE:
-        shutil.make_archive(FILENAME + "." + str(int(time.time())), "gztar", FILENAME, ".")
+        pass
+        # shutil.make_archive(FILENAME + "." + str(int(time.time())), "gztar", FILENAME, ".")

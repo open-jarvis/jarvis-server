@@ -134,7 +134,8 @@ def _on_REQUEST(client: object, userdata: object, message: object):
             result["current-action"] = CURRENT_ACTION
             result["available"] =   {
                                         "download": download_pending, 
-                                        "install": installation_pending 
+                                        "install":  False if download_pending else installation_pending
+                                        # if download == True, then you cannot directly install
                                     }
             result["schedule-install"] = cnf.get("schedule-install", False)
             if download_pending:
@@ -232,7 +233,7 @@ def poll(download=False, install=False):
 
 def schedule_loop():
     global logger
-    while True:
+    while Exiter.running:
         schedule = cnf.get("schedule-install", False)
         if schedule:
             if schedule < time.time():

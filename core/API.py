@@ -2,32 +2,49 @@
 # Copyright (c) 2020 by Philipp Scheer. All Rights Reserved.
 #
 
-# Functions follow this scheme:
-#
-# /id/ask
-# |--> id__ask
-#
-# /jarvis/api/id/answer
-# |--> id__answer
-#
-# So, - will become _  and
-#     / will become __
-#
-# The backend will already strip off the leading / and
-# on mqtt the leading /jarvis/api/
-#
-# Functions get a data object and return a tuple
-# consisting of (success: bool, data_or_err: str)
+"""
+Function names follow this scheme:
 
-from jarvis import Database
+```
+/id/ask -> id__ask
+/jarvis/api/id/answer -> id__answer
+```
+
+Rules:
+```
+- becomes _
+/ becomes __
+```
+
+The HTTP and MQTT backend strip off the leading `/` or `/jarvis/api/`  
+Functions get a data object and return a tuple
+consisting of `(success: bool, data_or_err: str)`
+"""
+
 import time
 import random
+from jarvis import Database
+
+
+TOKEN_LENGTH = 8
+"""
+Length of a token  
+Tokens are used to identify a client when he wants to register
+"""
 
 TOKEN_EXPIRATION_SECONDS = 120
-TOKEN_LENGTH = 8
+"""
+Amount of seconds until an issued token expires. Currently 2min  
+Tokens are being issued by generate_token and consumed by register_device
+"""
 
 
 def generate_token(data: dict, token: str = None) -> tuple:
+    """
+    Generate a token  
+    Required fields:
+    * `permission-level` - An integer from [Permissions.PERMISSIONS](Permissions#PERMISSIONS)
+    """
     require(data, ["permission-level"])
 
     if token is None:
@@ -44,6 +61,13 @@ def generate_token(data: dict, token: str = None) -> tuple:
 
 
 def register_device(data: dict) -> tuple:
+    """
+    Register a device  
+    Required fields:  
+    * `name` - Name of the device
+    * `token` - Token issued by [generate_token](#generate_token)
+    * `type` - Connection type, can be whatever you want but `app`, `web`, `device`, etc... are good types
+    """
     require(data, ["name", "token", "type"])
 
     if data["token"].startswith("app:"):
@@ -72,6 +96,11 @@ def register_device(data: dict) -> tuple:
 
 
 def unregister_device(data: dict) -> tuple:
+    """
+    Remove a registered device  
+    Required fields:
+    * `target-token` - Token of the app/device you want to remove
+    """
     require(data, ["target-token"])
 
     Database().table("instants").filter(
@@ -80,6 +109,9 @@ def unregister_device(data: dict) -> tuple:
 
 
 def get_devices(data: dict) -> tuple:
+    """
+    Get a list of devices
+    """
     require(data, ["token"])
 
     filter = {}
@@ -90,6 +122,14 @@ def get_devices(data: dict) -> tuple:
 
 
 def set_property(data: dict) -> tuple:
+    """
+    Set a device property
+    Required fields:
+    * `token` - The app/device token you want to set a property on
+    * `property` - Property to set
+    * `value` - Value to set  
+    This function sets a key:value entry on the given app/device and saves it back to the database
+    """
     require(data, ["token", "property", "value"])
 
     updated_object = Database().table(
@@ -100,6 +140,13 @@ def set_property(data: dict) -> tuple:
 
 
 def get_property(data: dict) -> tuple:
+    """
+    Get a device property (must be set by [set_property](#set_property))
+    Required fields:
+    * `token` - Token of app/device you want to get a property of
+    * `property` - Property you want to get  
+    If no property is set on the given token, `None` is returned instead
+    """
     require(data, ["token", "property"])
 
     if "target-token" in data:

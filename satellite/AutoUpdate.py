@@ -4,15 +4,14 @@ Copyright (c) 2021 Philipp Scheer
 
 
 import os
-import sys
 import json
 import time
 import shutil
 import requests
 import traceback
 from packaging import version
-from jarvis import Logger, Config, MQTT, Exiter, ThreadPool
 from dateutil.parser import parse as parsedate
+from jarvis import Logger, Config, MQTT, Exiter, ThreadPool
 
 
 # initialize jarvis classes
@@ -48,11 +47,6 @@ def install_downloaded_archive(downloaded_archive, local_installation_path):
 
 
 def store(url, path):
-    # r = requests.get(url)
-    # size = len(r.content)
-    # with open(path, "wb") as f:
-    #     f.write(r.content)
-    # return size
     global download_progress
     download_progress = 0
     with open(path, "wb") as f:
@@ -66,7 +60,6 @@ def store(url, path):
             dl = 0
             size = int(size)
             for data in response.iter_content(chunk_size=4096):
-                # time.sleep(3)
                 dl += len(data)
                 download_progress = dl / size
                 f.write(data)

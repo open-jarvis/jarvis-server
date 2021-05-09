@@ -12,6 +12,7 @@ from getpass import getpass
 parser = argparse.ArgumentParser(description='Jarvis Setup Script')
 parser.add_argument("-b", "--blind", default=False, action="store_true", help="Do not ask for installation directory, and use default values (best for non-user interactive scripts)")
 parser.add_argument("-c", "--credentials", default=False, action="store_true", help="Only ask for pre-shared-key and token-key credentials, then exit")
+parser.add_argument("-C", "--certificate", default=False, type=lambda x: x if os.path.isdir(x) else Non, help="Generate a certificate and keys, store to given directory")
 args = parser.parse_args()
 
 

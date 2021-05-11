@@ -21,7 +21,6 @@ import json
 import traceback
 from jarvis import Logger, Exiter, ThreadPool, MQTT
 import core.MQTTServer as MQTTServer
-import core.HTTPServer as HTTPServer
 import satellite.DatabaseAnalytics as DatabaseAnalytics
 import satellite.NLU as NLU
 import satellite.AutoUpdate as AutoUpdate
@@ -34,11 +33,11 @@ logger.console_on()
 
 # save current file for updates
 CURRENT_FILE = os.path.abspath(sys.argv[0])
+VERSION_FILE = f"{os.path.dirname(os.path.abspath(sys.argv[0]))}/version"
 
 
 # launch api servers
 tpool = ThreadPool(logger)
-tpool.register(HTTPServer.start_server, "http api server")
 tpool.register(MQTTServer.start_server, "mqtt api server")
 tpool.register(DatabaseAnalytics.start_analysis, "database analytics")
 tpool.register(AutoUpdate.update_checker, "autoupdate")
@@ -48,7 +47,7 @@ tpool.register(NLU.start_server, "nlu server")
 # restart listener
 mqtt = MQTT(client_id="jarvis")
 """
-Listens to: jarvis/backend/restart
+Listens to: jarvis/backend/restart|status
 """
 def _on_MSG(a, b, msg):
     global CURRENT_FILE
@@ -73,21 +72,23 @@ mqtt.on_message(_on_MSG)
 mqtt.subscribe("jarvis/backend/#")
 
 
-try:
-    logger.i("file", f"running jarvis file {CURRENT_FILE}")
-    try:
-        with open(f"{os.path.dirname(os.path.abspath(sys.argv[0]))}/version", "r") as f:
-            logger.i("version", f"running version v{f.read().strip()}")
-    except Exception:
-        logger.w("version", "couldn't read version")
 
-    # mainloop
+def main():
+    global logger
+    logger.i("File", f"Running jarvis file {CURRENT_FILE}")
+    try:
+        with open(VERSION_FILE, "r") as f:
+            logger.i("Version", f"Running version v{f.read().strip()}")
+    except Exception:
+        logger.w("Version", "Couldn't read version file")
     while Exiter.running:
         time.sleep(1)
-    
-    # exiting
-    logger.i("exiting", f"caught exit signal, exiting")
-except Exception:
-    logger.e("stopping", f"caught exception in infinite loop, stopping all subprocesses", traceback.format_exc())
+    logger.i("Stop", f"Caught exit signal, exiting")
 
-exit(0)
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception:
+        logger.e("Stop", f"Caught exception in main loop, stopping all threads", traceback.format_exc())
+    exit(0)

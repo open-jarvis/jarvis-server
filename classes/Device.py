@@ -3,6 +3,7 @@ Copyright (c) 2021 Philipp Scheer
 """
 
 
+from os import stat
 import time
 from jarvis import Database
 
@@ -27,12 +28,6 @@ class Device():
     def __init__(self, device_object = {}) -> None:
         """
         Initialize a new device with an object from the database
-        >>> "Works" if Device({"ip": "8.8.8.8", "token": "abcdef", "data": [], "last-seen": 1, "modified-at": 2, "created-at": 3}) else "Failed"
-        'Works'
-        >>> try:
-        ...     Device({"ip": "8.8.8.8", "token": "abcdef", "data": "", "last-seen": 1, "modified-at": 2, "created-at": 3})
-        ...     print("Fails!")
-        ... except AssertionError: pass
         """
         self.data = device_object
         if "created-at" not in self.data:

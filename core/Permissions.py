@@ -19,13 +19,13 @@ MASTER_TOKEN = "MASTER"
 
 
 cnf = Config()
-logger = Logger("permissions")
+logger = Logger("Permission")
 PRE_SHARED_KEY = cnf.get("pre-shared-key", None)
 TOKEN_KEY = cnf.get("token-key", None)
 if PRE_SHARED_KEY is None or TOKEN_KEY is None:
     cnf.set("pre-shared-key", "jarvis")
     cnf.set("token-key", "jarvis")
-    logger.w("api-keys", "jarvis api keys not configured, set to default")
+    logger.w("Keys", "Jarvis API keys not configured, set to default")
 
 
 DIRECTORY = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/..")
@@ -40,5 +40,4 @@ def get_allowed_functions(permission_level: int = 0):
     """
     if permission_level in PERMISSIONS:
         return PERMISSIONS[permission_level]
-    else:
-        return []
+    return []

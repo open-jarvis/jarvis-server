@@ -16,73 +16,55 @@ threading.settrace(Trace.tracer)
 
 
 import os
-import time
-import json
 import traceback
-from jarvis import Logger, Exiter, ThreadPool, MQTT
+from jarvis import Logger, Exiter, ThreadPool
 import core.MQTTServer as MQTTServer
+import core.Checks as Checks
 import satellite.DatabaseAnalytics as DatabaseAnalytics
 import satellite.NLU as NLU
 import satellite.AutoUpdate as AutoUpdate
+from classes.API import API
 
 
-# initiate logger
-logger = Logger("jarvisd")
+Checks.check_system()
+
+
+CURRENT_FILE = os.path.abspath(sys.argv[0])
+
+
+logger = Logger("Daemon")
 logger.console_on()
 
 
-# save current file for updates
-CURRENT_FILE = os.path.abspath(sys.argv[0])
-VERSION_FILE = f"{os.path.dirname(os.path.abspath(sys.argv[0]))}/version"
-
-
-# launch api servers
 tpool = ThreadPool(logger)
-tpool.register(MQTTServer.start_server, "mqtt api server")
-tpool.register(DatabaseAnalytics.start_analysis, "database analytics")
-tpool.register(AutoUpdate.update_checker, "autoupdate")
-tpool.register(NLU.start_server, "nlu server")
+tpool.register(MQTTServer.start_server, "mqtt")
+tpool.register(DatabaseAnalytics.start_analysis, "analytics")
+tpool.register(AutoUpdate.update_checker, "update")
+tpool.register(NLU.start_server, "nlu")
 
 
-# restart listener
-mqtt = MQTT(client_id="jarvis")
-"""
-Listens to: jarvis/backend/restart|status
-"""
-def _on_MSG(a, b, msg):
-    global CURRENT_FILE
-    global logger, tpool, mqtt
-    try:
-        if msg.topic == "jarvis/backend/restart":
-            logger.i("restart", "caught mqtt restart signal, restarting")
-            try:
-                os.execv(sys.executable, ["python3", CURRENT_FILE, "--upgraded"])
-            except Exception:
-                logger.e("failed-restart", "failed to restart script, see traceback", traceback.format_exc())
-        if msg.topic == "jarvis/backend/status":
-            data = json.loads(msg.payload.decode())
-            if "reply-to" in data:
-                result = {}
-                for t in tpool.threads:
-                    result[t.name] = t.is_alive()
-                mqtt.publish(data["reply-to"], json.dumps({"status": "up", "threads": result}))
+@API.route("jarvis/status")
+def jarvis_status():
+    global tpool
+    result = {}
+    for t in tpool.threads:
+        result[t.name] = t.is_alive()
+    return result
+
+@API.route("jarvis/restart")
+def jarvis_restart():
+    global logger, CURRENT_FILE
+    logger.i("Restart", "Restarting due to MQTT restart signal")
+    try: 
+        os.execv(sys.executable, ["python3", CURRENT_FILE, "--upgraded"])
     except Exception:
-        logger.e("jarvis-mqtt", "error in main mqtt endpoint, see traceback", traceback.format_exc())
-mqtt.on_message(_on_MSG)
-mqtt.subscribe("jarvis/backend/#")
-
+        logger.e("Restart", "Failed to restart Jarvis, see traceback", traceback.format_exc())
 
 
 def main():
     global logger
     logger.i("File", f"Running jarvis file {CURRENT_FILE}")
-    try:
-        with open(VERSION_FILE, "r") as f:
-            logger.i("Version", f"Running version v{f.read().strip()}")
-    except Exception:
-        logger.w("Version", "Couldn't read version file")
-    while Exiter.running:
-        time.sleep(1)
+    Exiter.mainloop()
     logger.i("Stop", f"Caught exit signal, exiting")
 
 

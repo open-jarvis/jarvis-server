@@ -2,8 +2,6 @@
 This module provides classes to handle crucial Jarvis functionalities
 
 Subclasses include:
-* [`API.py`](core/API)  
-Handles Database connection for API requests
 
 * [`Checks.py`](core/Checks)  
 Performs system checks before running Jarvis

@@ -15,11 +15,15 @@ logger = Logger("Checks")
 do_exit = False
 
 
-def check_system():
+def check_system(skip_checks: bool = False):
     """
-    Check if the system can run Jarvis
+    Check if the system can run Jarvis  
+    If you want to skip checks, set the `skip_checks` variable to `True`, throws a warning message
     """
-    global logger, do_exit
+    global logger, do_exit, VERSION_FILE
+    if skip_checks:
+        logger.w("Skip", "Skipping checks is not recommended")
+        return
     _check_database()
     if do_exit:
         _err("Requirements are not met. Jarvis cannot run")
@@ -34,10 +38,10 @@ def check_system():
 
 def _check_database():
     """
-    Check if the database is up
+    Check if the database is up.  
+    The connection is checked and also credentials
     """
-    up = Database().up
-    if not up:
+    if not Database(exit_on_fail=False).up:
         _err("Database is not running")
 
 

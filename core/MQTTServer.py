@@ -1,15 +1,15 @@
-#
-# Copyright (c) 2020 by Philipp Scheer. All Rights Reserved.
-#
+"""
+Copyright (c) 2021 Philipp Scheer
+"""
 
-import time
+
 import json
 import traceback
 from jarvis import MQTT, Exiter, Logger
 from classes.API import API
 
 
-logger = Logger("MQTT API")
+logger = Logger("API")
 mqtt = MQTT(client_id="MQTT Server")
 
 
@@ -23,14 +23,14 @@ def on_message(c, ud, msg):
     try:
         data = json.loads(msg.payload.decode())
         res = json.dumps(API.execute(msg.topic))
-        logger.s("MQTT", f"Successfully ran endpoint '{msg.topic}' and got response '{res}'")
+        logger.s("Server", f"Successfully ran endpoint '{msg.topic}' and got response '{res}'")
 
         if "reply-to" in data:
             mqtt.publish(data["reply-to"], res)
         else:
-            logger.w("MQTT", f"No 'reply-to' channel specified for topic '{msg.topic}'")
+            logger.w("Server", f"No 'reply-to' channel specified for topic '{msg.topic}'")
     except Exception as e:
-        logger.e("MQTT", f"Unknown exception occured: {str(e)}", traceback.format_exc())
+        logger.e("Server", f"Unknown exception occured: {str(e)}", traceback.format_exc())
 
 
 def start_server():

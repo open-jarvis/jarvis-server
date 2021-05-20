@@ -8,25 +8,23 @@
 import sys
 import threading
 import core.Trace as Trace
+import core.Checks as Checks
 
 
-# set tracer
 sys.settrace(Trace.tracer)
 threading.settrace(Trace.tracer)
+
+Checks.check_system()
 
 
 import os
 import traceback
 from jarvis import Logger, Exiter, ThreadPool
 import core.MQTTServer as MQTTServer
-import core.Checks as Checks
 import satellite.DatabaseAnalytics as DatabaseAnalytics
 import satellite.NLU as NLU
 import satellite.AutoUpdate as AutoUpdate
 from classes.API import API
-
-
-Checks.check_system()
 
 
 CURRENT_FILE = os.path.abspath(sys.argv[0])

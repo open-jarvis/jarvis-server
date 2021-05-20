@@ -134,12 +134,10 @@ def poll(download=False, install=False):
 
         start = time.time()
         remote, local = fetch_versions(remote_version_file, local_version_file)
-        print(f"check_version took {time.time() - start}s")
 
         if repo == "server":    # we use the server repo as reference
             start = time.time()
             update_remote, update_local, remote_timestamp = get_update_notes(remote_update_notes, local_update_notes)
-            print(f"get_update_notes took {time.time() - start}s")
             start = time.time()
             cnf.set("version", {
                 "remote": str(remote),
@@ -159,7 +157,6 @@ def poll(download=False, install=False):
                     "local": update_local
                 }
             })
-            print(f"cnf.set took {time.time() - start}s")
 
         if remote > local:
             at_least_one_update = True

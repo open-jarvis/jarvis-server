@@ -36,10 +36,19 @@ class API():
     ```
     """
 
+    AUTO_GENERATE_DOCUMENTATION = "APIDOC.md"
+    """
+    Automatically generate a documentation when code snippets register API endpoints  
+    If you **do not** want to autogenerate a documentation, set to `False`  
+    Otherwise, specify an absolute or relative path to the documentation file  
+    The relative file will be placed in `/jarvis/server/<path>`  
+    Documentation output format is Markdown
+    """
+
     DOCUMENTATION = {}
     """
     A dictionary containing all the function documentations  
-    Format: { <endpoint>: <documentation> }
+    Format: { `<endpoint>`: `<documentation>` }
     """
 
     routes = {}
@@ -48,7 +57,7 @@ class API():
     """
 
     @staticmethod
-    def _get(route):
+    def _get(route: str):
         """
         Get a route from array, else return the default route
         """
@@ -57,7 +66,7 @@ class API():
         return API.default_route
     
     @staticmethod
-    def execute(route, *args, **kwargs):
+    def execute(route: str, *args, **kwargs) -> set:
         """
         Execute a route with given arguments  
         Returns a tuple with `(True|False, string result)`  
@@ -78,7 +87,7 @@ class API():
         """
         This is the default route and gets handled if no function was found for route
         """
-        raise Exception("endpoint not found")
+        raise Exception("Endpoint not found")
 
     @staticmethod
     def route(path):
@@ -88,7 +97,7 @@ class API():
         """
         def decor(func):
             API.DOCUMENTATION[path] = func.__doc__
-            API._save_docs(f"{os.path.dirname(os.path.abspath(sys.argv[0]))}/APIDOC.md")
+            API._save_docs()
             def wrap(*args, **kwargs):
                 res = func(*args, **kwargs)
                 return res
@@ -97,12 +106,15 @@ class API():
         return decor
 
     @staticmethod
-    def _save_docs(to_file):
+    def _save_docs() -> None:
+        to_file = API.AUTO_GENERATE_DOCUMENTATION
+        if not to_file.startswith("/"):
+            to_file = f"{os.path.dirname(os.path.abspath(sys.argv[0]))}/{API.AUTO_GENERATE_DOCUMENTATION}"
         try:
             with open(to_file, "w") as f:
                 f.write("# API Documentation\n\n")
                 doc = OrderedDict(sorted(API.DOCUMENTATION.items()))
                 for e, d in doc.items():
-                    f.write(f"## {e}  \n\n{d}\n\n")
+                    f.write(f"## `{e}`  \n\n{d}\n\n")
         except Exception:
             print(traceback.format_exc())

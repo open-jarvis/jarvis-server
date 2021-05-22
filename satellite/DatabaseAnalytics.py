@@ -18,6 +18,7 @@ def start_analysis():
         analytics_loop()
     except Exception:
         logger.e("Error", "Error occured while getting analytics", traceback.format_exc())
+        time.sleep(5)
         start_analysis()
 
 

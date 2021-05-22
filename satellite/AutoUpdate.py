@@ -11,15 +11,18 @@ import requests
 import traceback
 from packaging import version
 from dateutil.parser import parse as parsedate
-from jarvis import Logger, Config, MQTT, Exiter, ThreadPool
+from jarvis import Logger, Config, Exiter, ThreadPool
+from classes.API import API
 
 
-# initialize jarvis classes
-logger = Logger("updater")
+logger = Logger("Update")
 cnf = Config()
+tpool = ThreadPool()
+download_pending = False
+installation_pending = False
+download_progress = 0
 
 
-# define constants
 VERSION_NAMES = {
     "0.0.0": "Alpine Alpha",
     "0.0.1": "Alpine Beta",
@@ -34,19 +37,21 @@ ROOT_DIR         = cnf.get("directories", {"root": "/jarvis"})["root"]
 PROTOCOL         = "https"
 SUFFIX           = "-latest.tar.gz"
 
-download_pending = False
-installation_pending = False
-download_progress = 0
-tpool = ThreadPool()
 
-# helper functions
 def install_downloaded_archive(downloaded_archive, local_installation_path):
+    """
+    Unpack the downloaded archive from `downloaded_archive` path -> `local_installation_path`  
+    Removes existing data in `downloaded_archive`
+    """
     shutil.rmtree(local_installation_path, ignore_errors=True)
     shutil.unpack_archive(downloaded_archive, local_installation_path)
     os.unlink(downloaded_archive)
 
 
-def store(url, path):
+def download(url, path):
+    """
+    Download `url` and store to `path`
+    """
     global download_progress
     download_progress = 0
     with open(path, "wb") as f:
@@ -67,7 +72,10 @@ def store(url, path):
     return size
 
 
-def update_size():
+def calculate_update_size():
+    """
+    Calculate the total size of all repositories
+    """
     global UPDATE_REPOS, PROTOCOL
     total_size = 0
     for repo in UPDATE_REPOS:
@@ -75,7 +83,12 @@ def update_size():
     return total_size
 
 
-def check_versions(version_url, version_local):
+def fetch_versions(version_url, version_local):
+    """
+    Get local and remote versions  
+    * `version_url` - The URL to a file containing a version string like `v0.0.1`, `v2.15.3`, etc.  
+    * `version_local` - File path to a file containing a version string
+    """
     remote_version = requests.get(version_url).text.strip()
     with open(version_local, "r") as f:
         local_version = f.read().strip()
@@ -83,6 +96,11 @@ def check_versions(version_url, version_local):
 
 
 def get_update_notes(remote_url, local_url):
+    """
+    Get the remote and local update notes  
+    * `remote_url` - URL of a markdown file containing update notes  
+    * `local_url` - File path of a markdown file containing the current update notes
+    """
     rsp  = requests.get(remote_url)
     stmp = int(time.mktime(parsedate(rsp.headers["last-modified"]).timetuple()))
     rmt  = rsp.text.strip()
@@ -91,64 +109,14 @@ def get_update_notes(remote_url, local_url):
     return (rmt, lcl, stmp)
 
 
-def _on_REQUEST(client: object, userdata: object, message: object):
-    try:
-        global CURRENT_ACTION, UPDATE_REPOS, logger, mqtt, download_pending, installation_pending, download_progress
-        topic = message.topic
-        data = json.loads(message.payload.decode())
-        action = topic.split("/")[-1]
-
-        result = { "success": True }
-
-        """jarvis/update/poll|download|install|status"""
-
-        if action == "poll":
-            logger.i("poll", "received mqtt poll signal")
-            poll()
-            result["update"] = cnf.get("version", {})
-        if action == "download":
-            logger.i("download", "received mqtt download signal")
-            if not download_pending:
-                result["success"] = False
-                result["error"] = "No update available!"
-            else:
-                tpool.register(poll, f"install update {int(time.time())}", [True, False])
-        if action == "install":
-            logger.i("install", "received mqtt install signal")
-            if not installation_pending:
-                result["success"] = False
-                result["error"] = "No update available!"
-            else:
-                tpool.register(poll, f"install update {int(time.time())}", [False, True])
-        if action == "status":
-            logger.i("install", "received mqtt status signal")
-            result = cnf.get("version", {})  # benchmark: 0.17 - 0.2s
-            result["success"] = True
-            result["current-action"] = CURRENT_ACTION
-            result["available"] =   {
-                                        "download": download_pending, 
-                                        "install":  False if download_pending else installation_pending
-                                        # if download == True, then you cannot directly install
-                                    }
-            result["schedule-install"] = cnf.get("schedule-install", False)
-            if download_pending:
-                download_progress = 0
-            result["progress"] = { "download": download_progress }
-        if "reply-to" in data:
-            mqtt.publish(data["reply-to"], json.dumps(result))  # benchmark: 0.01 - 0.2s
-            # benchmark total: 0.18s
-    except Exception:
-        logger.e("on-mqtt", "an error occured while handling an mqtt endpoint, see traceback", traceback.format_exc())
-
-
-mqtt = MQTT(client_id="updater")
-mqtt.on_message(_on_REQUEST)
-mqtt.subscribe("jarvis/update/#")
-
-
 def poll(download=False, install=False):
+    """
+    Poll for updates  
+    * If [`download`]() is set, automatically download the file. Overrides the config setting  
+    * If `install` is set, automatically install the update. Overrides the config setting
+    """
     global CURRENT_ACTION, UPDATE_REPOS, SERVER, VERSION_NAMES, logger, mqtt, cnf, download_progress, download_pending, installation_pending
-    logger.i("polling", f"polling for updates from server {SERVER}")
+    logger.i("Poll", f"Polling for updates from server {SERVER}")
     at_least_one_update = False
     do_restart = False
     for repo in UPDATE_REPOS:
@@ -165,13 +133,11 @@ def poll(download=False, install=False):
         local_installation_path         = f"{ROOT_DIR}/{repo}"
 
         start = time.time()
-        remote, local = check_versions(remote_version_file, local_version_file)
-        print(f"check_version took {time.time() - start}s")
+        remote, local = fetch_versions(remote_version_file, local_version_file)
 
         if repo == "server":    # we use the server repo as reference
             start = time.time()
             update_remote, update_local, remote_timestamp = get_update_notes(remote_update_notes, local_update_notes)
-            print(f"get_update_notes took {time.time() - start}s")
             start = time.time()
             cnf.set("version", {
                 "remote": str(remote),
@@ -180,7 +146,7 @@ def poll(download=False, install=False):
                     "remote": VERSION_NAMES[str(remote)],
                     "local": VERSION_NAMES[str(local)]
                 },
-                "update-size": update_size(),
+                "update-size": calculate_update_size(),
                 "server": SERVER,
                 "timestamp": {
                     "local": int(time.time()),
@@ -191,11 +157,10 @@ def poll(download=False, install=False):
                     "local": update_local
                 }
             })
-            print(f"cnf.set took {time.time() - start}s")
 
         if remote > local:
             at_least_one_update = True
-            logger.i("available", f"update available from v{local} to v{remote}")
+            logger.i("Available", f"Update available from v{local} to v{remote}")
 
             # download is only pending, if remote file was not downloaded
             download_pending = not os.path.isfile(download_file_path)
@@ -206,8 +171,8 @@ def poll(download=False, install=False):
             if download or cnf.get("auto-download-updates", False):
                 CURRENT_ACTION = "downloading"
                 download_pending = False
-                size = store(remote_server_latest_file_path, download_file_path)
-                logger.i("download", f"downloaded update {remote}, size: {size}")
+                size = download(remote_server_latest_file_path, download_file_path)
+                logger.i("Download", f"Downloaded update {remote}, size: {size}")
                 installation_pending = True
 
             if install or cnf.get("auto-install-updates", False):
@@ -215,28 +180,34 @@ def poll(download=False, install=False):
                 installation_pending = False
                 CURRENT_ACTION = "installing"
                 install_downloaded_archive(download_file_path, local_installation_path)
-                logger.i("install", f"installed update v{remote}")
+                logger.i("Install", f"Installed update v{remote}")
 
             CURRENT_ACTION = "idle"
     if do_restart:
         mqtt.publish("jarvis/backend/restart", "{}")
     if not at_least_one_update:
-        logger.i("polling", f"no update found on server {SERVER}")
+        logger.i("Poll", f"No update found on server {SERVER}")
 
 
 def schedule_loop():
+    """
+    In a loop, check if the scheduled install timestamp has passed and if so, install the update
+    """
     global logger
     while Exiter.running:
         schedule = cnf.get("schedule-install", False)
         if schedule:
             if schedule < time.time():
-                logger.i("Scheduled Install", "Running a scheduled installation")
+                logger.i("Schedule", "Running a scheduled installation")
                 cnf.set("schedule-install", False)
                 poll(False, True)
         time.sleep(1)
 
 
 def update_checker():
+    """
+    Starts the mainloop (`schedule_loop` and poll loop)
+    """
     global mqtt, logger, tpool, POLL_INTERVAL, DOWNLOADS_FOLDER
 
     try:
@@ -250,11 +221,129 @@ def update_checker():
                 if not Exiter.running:
                     break
                 time.sleep(0.49)
-        logger.i("shutdown", "shutting down autoupdate server")
+        logger.i("Shutdown", "Shutting down AutoUpdate server")
     except Exception as e:
-        logger.e("mainloop", f"an exception occured, next try in {POLL_INTERVAL // 1.5}s, see traceback", traceback.format_exc())
+        logger.e("Mainloop", f"An exception occured, next try in {POLL_INTERVAL // 1.5}s", traceback.format_exc())
         for i in range(int((POLL_INTERVAL // 1.5) * 2)):
             if not Exiter.running:
                 return
             time.sleep(0.49)
         update_checker()
+
+
+@API.route("jarvis/update/poll")
+def poll_for_updates(data=None):
+    """
+    Manually poll for new updates  
+    Checks the update server and compare the remote to the local version  
+    If an update is available, retrieve the update notes  
+    Returns update information:
+    ```python
+    {
+        "success": true|false,
+        "update": {
+                "remote": str, # version string (eg. 1.2, 2.15.3)
+                "local": str, # version string (eg. 1.2, 2.15.3)
+                "name": {
+                    "remote": str, # version name (eg. Beta)
+                    "local": str # version name (eg. Aplha)
+                },
+                "update-size": int, # size of update in bytes
+                "server": "jarvisdata.philippscheer.com",
+                "timestamp": {
+                    "local": int, # unix timestamp of last file change
+                    "remote": int # unix timestamp of last file change
+                },
+                "notes": {
+                    "remote": str, # markdown of remote update notes
+                    "local": str # markdown of local update notes
+                }
+            }|{}
+    }
+    ```
+    """
+    global logger
+    logger.i("Poll", "Received MQTT poll signal")
+    poll()
+    return {"success": True, "update": cnf.get("version", {})}
+
+
+@API.route("jarvis/update/download")
+def download_update(data=None):
+    """
+    Download an update  
+    Make sure to call `jarvis/update/poll` before downloading  
+    Returns:
+    ```python
+    {
+        "success": true|false,
+        "error?": ...
+    }
+    ```
+    """
+    global logger, download_pending
+    logger.i("Download", "Received MQTT download signal")
+    if not download_pending:
+        return {"success": False, "error": "No update available!"}
+    else:
+        tpool.register(poll, f"download update {int(time.time())}", [True, False])
+        return True
+
+
+@API.route("jarvis/update/install")
+def install_update(data=None):
+    """
+    Install an update  
+    Make sure to call `jarvis/update/poll` and `jarvis/update/download` before installing  
+    Returns:
+    ```python
+    {
+        "success": true|false,
+        "error?": ...
+    }
+    ```
+    """
+    global logger, installation_pending
+    logger.i("Install", "Received MQTT install signal")
+    if not installation_pending:
+        return {"success": False, "error": "No update available!"}
+    else:
+        tpool.register(poll, f"install update {int(time.time())}", [False, True])
+        return True
+
+
+@API.route("jarvis/update/status")
+def update_status(data=None):
+    """
+    Gets the current update status
+    Returns:
+    ```python
+    {
+        "success": true|false,
+        "current-action": "idle|downloading|installing",
+        "available": {
+            "download": true|false,
+            "install": true|false
+        },
+        "schedule-install": int|false, # timestamp of scheduled install
+        "progress": {
+            "download": float # float percentage of progress 0-1
+        }
+    }
+    ```
+    """
+    global CURRENT_ACTION, download_pending, installation_pending
+    logger.i("Install", "Received MQTT status signal")
+    result = cnf.get("version", {})  # benchmark: 0.17 - 0.2s
+    result["success"] = True
+    result["current-action"] = CURRENT_ACTION
+    result["available"] =   {
+                                "download": download_pending, 
+                                "install":  False if download_pending else installation_pending
+                                # if download == True, then you cannot directly install
+                            }
+    result["schedule-install"] = cnf.get("schedule-install", False)
+    if download_pending:
+        download_progress = 0
+    result["progress"] = { "download": download_progress }
+    return result

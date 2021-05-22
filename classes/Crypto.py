@@ -39,23 +39,20 @@ class Crypto:
         return ( private_key, public_key) 
     
     @staticmethod
-    def sign(message: str, private_key: str) -> bytes:
+    def sign(message: bytes, private_key: str) -> bytes:
         """Take a string `message` and a PEM `private_key` and return the signed message."""
-        message = str.encode(message, "utf-8")
         priv = rsa.PrivateKey.load_pkcs1(private_key, format="PEM")
         return rsa.sign(message, priv, hash_method="SHA-512") # 'MD5’, 'SHA-1’, 'SHA-224’, SHA-256’, 'SHA-384’ or 'SHA-512'
 
     @staticmethod
-    def verify(message: str, signature: bytes, public_key: str):
+    def verify(message: bytes, signature: bytes, public_key: str):
         """Take the public key and see if it matches the signature"""
-        message = str.encode(message, "utf-8")
         pub = rsa.PublicKey.load_pkcs1(public_key, format="PEM")
         return True if rsa.verify(message, signature, pub) else False
 
     @staticmethod
-    def encrypt(message: str, public_key: str):
+    def encrypt(message: bytes, public_key: str):
         """Take a string `message` and a PEM `public_key` and return an encrypted message"""
-        message = str.encode(message, "utf-8")
         pub = rsa.PublicKey.load_pkcs1(public_key, format="PEM")
         return rsa.encrypt(message, pub)
     
@@ -83,21 +80,26 @@ class Crypto:
         """Encrypt a `message` with AES using a given `key` and initialization vector `iv`"""
         cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
         while not len(message) % len(key) == 0:
-            message += b" "
+            message += b'\x00'
         encryptor = cipher.encryptor()
         return encryptor.update(message) + encryptor.finalize()
     
     @staticmethod
-    def aes_decrypt(encrypted: bytes, key: bytes, iv: bytes):
+    def aes_decrypt(encrypted: bytes, key: bytes, iv: bytes) -> bytes:
         """Decrypt an `encrypted` message with AES using a given `key` and initialization vector `iv`"""
         cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
         decryptor = cipher.decryptor()
-        return decryptor.update(encrypted) + decryptor.finalize()
+        return (decryptor.update(encrypted) + decryptor.finalize()).rstrip(b'\x00')
 
 
-if "--test" in sys.argv:
-    key, iv = Crypto.symmetric(256)
-    print("Encrypt message 'Hello, World!' using AES: ", Crypto.aes_encrypt(b"Hello, World!", key, iv))
-    priv, pub = Crypto.keypair()
-    print("Private Key: ", priv)
-    print("Public Key: ", pub)
+# if "--test" in sys.argv:
+#     key, iv = Crypto.symmetric(256)
+#     msg = b",!" * 15
+#     enc = Crypto.aes_encrypt(msg, key, iv)
+#     dec = Crypto.aes_decrypt(enc, key, iv)
+#     print(f"Encrypt message '{msg}' (len {len(msg)}) using AES: ", enc)
+#     print(f"Decrypt message '{enc}' using AES: ", dec)
+#     print()
+#     priv, pub = Crypto.keypair()
+#     print("Private Key: ", priv)
+#     print("Public Key: ", pub)

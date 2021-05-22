@@ -22,13 +22,6 @@ consisting of `(success: bool, data_or_err: str)`
 """
 
 
-from classes.Token import Token
-import time
-import random
-from jarvis import Database
-from classes import Device
-
-
 class API():
     """
     API helper class to register MQTT routes

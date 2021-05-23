@@ -2,3 +2,5 @@ rsa
 # pyOpenSSL
 cryptography
 open-jarvis
+paho.mqtt
+couchdb2

@@ -59,6 +59,7 @@ class Crypto:
     @staticmethod
     def decrypt(encrypted: bytes, private_key: str):
         """Decrypt an encrypted message using the private key"""
+        print("decrypt", encrypted, private_key)
         priv = rsa.PrivateKey.load_pkcs1(private_key, format="PEM")
         return rsa.decrypt(encrypted, priv)
 
@@ -90,16 +91,3 @@ class Crypto:
         cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
         decryptor = cipher.decryptor()
         return (decryptor.update(encrypted) + decryptor.finalize()).rstrip(b'\x00')
-
-
-# if "--test" in sys.argv:
-#     key, iv = Crypto.symmetric(256)
-#     msg = b",!" * 15
-#     enc = Crypto.aes_encrypt(msg, key, iv)
-#     dec = Crypto.aes_decrypt(enc, key, iv)
-#     print(f"Encrypt message '{msg}' (len {len(msg)}) using AES: ", enc)
-#     print(f"Decrypt message '{enc}' using AES: ", dec)
-#     print()
-#     priv, pub = Crypto.keypair()
-#     print("Private Key: ", priv)
-#     print("Public Key: ", pub)

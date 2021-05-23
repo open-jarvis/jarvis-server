@@ -3,85 +3,85 @@ Copyright (c) 2021 Philipp Scheer
 """
 
 
-import sys
 import json
-import base64
-from Crypto import Crypto
+import traceback
+from jarvis import MQTT, Logger
+from jarvis.Config import Config
+from .Device import Device
+from .Crypto import Crypto
+from .MessageProtocol import MessageProtocol
+
+
+logger = Logger("Communication")
+cnf = Config()
+
+
+keys = cnf.get("keys", None)
+
+if keys is None:
+    keys = {"public": "", "private": ""}
+    # logger.w("Keys", "Private and Public RSA keys not set, generating keys")
+    # keys = {}
+    # keys["private"], keys["public"] = Crypto.keypair(8192)
+    # cnf.set("keys", keys)
+    pass
+
+
+PRIVATE_KEY = keys["private"]
+PUBLIC_KEY = keys["public"]
 
 
 class Communication:
-    def __init__(self, local_private_key: str, local_public_key: str, remote_public_key: str, aes_key: bytes, aes_iv: bytes) -> None:
-        """Wrapper class for secure communication"""
-        self.priv = local_private_key
-        self.pub = local_public_key
-        self.rpub = remote_public_key
-        self.key = aes_key
-        self.iv = aes_iv
-    
-    def encrypt(self, message: object, is_json: bool = True) -> dict:
-        """Encrypt a message using a symmetric key, sign the message and encrypt the symmetric key using RSA
-        Returns:
-        ```python
-        >>> encrypt('{"this": "is", "a": "test"}', is_json=True)
-        {
-            "m": ... encrypted message ...,
-            "s": ... message signature ...,
-            "k": ... encrypted symmetric key ...
-        }
-        ```"""
-        if is_json:
-            message = json.dumps(message)
-        message = _str_to_bytes(message)
-        message_signature = Crypto.sign(message, self.priv)
-        encrypted_message = Crypto.aes_encrypt(message, self.key, self.iv)
-        symkey = json.dumps({ "key": b64e(self.key), "iv": b64e(self.iv) })
-        encrypted_symmetric_key = Crypto.encrypt(_str_to_bytes(symkey), self.pub)
-        return json.dumps({
-            "m": b64e(encrypted_message),
-            "s": b64e(message_signature),
-            "k": b64e(encrypted_symmetric_key)
-        })
-    
-    def decrypt(self, data: str, ignore_invalid_signature: bool = False) -> object:
-        """Takes an encrypted message (must be encrypted by an official Jarvis `Communication.encrypt()` message)
+    """A client-server communication wrapper.  
+    There are two communication (MQTT) channels:  
+    - `jarvis/client/<id>/#` handles key and information exchange  
+        The client device must listen to this channel and eg. provide it's public key on request  
+        Possible messages:
+        - GET
+            - public-key
+                * The server sends `jarvis/client/<id>/get/public-key` -> `{"format": "PEM", "reply-to": ... one time channel ... }`  
+                * The client should respond: `<one time channel>` -> `{"public-key": false|"... PEM representation of RSA public key ..."}`  
+                If the `public-key` is `false`, the client device will be marked as `insecure` and traffic will be unencrypted.  
+                The server might ask the client for a public key periodically. As long as the client does not send a valid `public-key` it will stay `insecure` 
+    - `jarvis/#` handles any other traffic (eg. getting NLU results, etc...)
+    """
+
+    KEY_START_SEQ = "-----BEGIN RSA PUBLIC KEY-----"
+    """The starting sequence for client public keys"""
+
+    def __init__(self, id) -> None:
+        """Create a new Communication session between the Jarvis server and client device"""
+        self.id = id
+        self.device = Device.load(id) # throws an exception if no device is found for this id
+        self.secure = self.device["secure"]
+        self.rpub = None
+        self.refresh_aes()
+
+    def refresh_aes(self):
+        """Get a new AES key and initialization vector.  
+        Timing for generating keys and initialization vectors:  
+        ```
+        | Amount of key - iv pairs  | Took time         |
+        |---------------------------|-------------------|
+        |                     1,000 | 0.0117s - 0.0123s |
+        |                    10,000 | 0.1173s - 0.1247s |
+        |                   100,000 | 1.1763s - 1.1811s |
+        ```
+        You can see a linear relationship between the number of keys generated and the time required
         """
-        data = json.loads(data)
-        m = b64d(data["m"])
-        s = b64d(data["s"])
-        k = b64d(data["k"])
-        symkey = json.loads(_bytes_to_str(Crypto.decrypt(k, _bytes_to_str(self.priv))))
-        key = b64d(symkey["key"])
-        iv = b64d(symkey["iv"])
-        decrypted_message = Crypto.aes_decrypt(m, key, iv)
-        sign_match = Crypto.verify(decrypted_message, s, self.rpub)
-        if not sign_match:
-            if not ignore_invalid_signature:
-                raise Exception("Invalid Signature")
-        return _bytes_to_str(decrypted_message)
+        self.key, self.iv = Crypto.symmetric()
 
+    def get_public_key(self):
+        """Try to retrieve the client public key"""
+        try:
+            result = json.loads(MQTT.onetime(f"jarvis/client/{self.id}/get/public-key", {"format": "PEM"}, timeout=15))
+            self.device["secure"] = False
+            assert "public-key" in result, "Public key not in result"
+            assert result["public-key"].startswith(Communication.KEY_START_SEQ), f"Public key does not start with sequence '{Communication.KEY_START_SEQ}', check format (DER vs. PEM)"
+            self.device["data"]["public-key"] = result["public-key"]
+            self.device["secure"] = True
+        except Exception:
+            logger.e("PublicKey", f"Couldn't retrieve public key of client {self.id}", traceback.format_exc)
+            # we do not set secure to false, because the client might be offline and can get back online in a few seconds
 
-def b64e(bytes):
-    return _bytes_to_str(base64.b64encode(bytes))
-
-def b64d(bytes):
-    return base64.b64decode(bytes)
-
-def _bytes_to_str(byte_like_obj: bytes):
-    return byte_like_obj.decode("utf-8")
-
-
-def _str_to_bytes(string: str):
-    return str.encode(string, "utf-8")
-
-
-if "--test" in sys.argv:
-    lpriv, lpub = Crypto.keypair(1024)
-    rpriv, rpub = Crypto.keypair(1024)
-    lkey, liv = Crypto.symmetric()
-    rkey, riv = Crypto.symmetric()
-    lcom = Communication(lpriv, lpub, rpub, lkey, liv)
-    rcom = Communication(rpriv, rpub, lpub, rkey, riv)
-    enc = lcom.encrypt("jeremiasz ist dumm", is_json=False)
-    print(enc)
-    dec = rcom.decrypt(enc, ignore_invalid_signature=False)
-    print(dec)
+    

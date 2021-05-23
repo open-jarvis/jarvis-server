@@ -15,15 +15,24 @@ class Device():
 
     REQUIREMENTS = {
         "ip": str,
-        "token": str, 
-        "data": list,
+        "data": dict,
+        "secure": bool,
         "last-seen": int,
         "modified-at": int,
         "created-at": int
     }
-    """
-    Required fields that have to be in a device object
-    """
+    """Required fields that have to be in a device object"""
+
+    DEFAULTS = {
+        "ip": "127.0.0.1",
+        "token": None,
+        "data": {},
+        "secure": False,
+        "last-seen": None,
+        "modified-at": None,
+        "created-at": None
+    }
+    """Default values when creating a new device"""
 
     def __init__(self, device_object = {}) -> None:
         """
@@ -56,9 +65,7 @@ class Device():
 
     @staticmethod
     def load(id):
-        """
-        Load a device from the database given its id
-        """
+        """Load a device from the database given its id"""
         res = Database().table("devices").find({ "_id": { "$eq": id } })
         if res.found:
             res[0]["id"] = res[0]["_id"]
@@ -67,3 +74,8 @@ class Device():
             return Device(res[0])
         else:
             raise Exception(f"No device found with id {id}")
+
+    @staticmethod
+    def new(data):
+        """Generate a new device with given data"""
+        return Device({**Device.DEFAULTS, **data})

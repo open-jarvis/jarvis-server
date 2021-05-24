@@ -26,6 +26,8 @@ class MessageProtocol:
         3. The message is encrypted using symmetric AES encryption
         4. The symmetric key used to encrypt the message is encrypted using the remote public key
 
+        TODO: more explanation
+
         Returns:
         ```python
         >>> encrypt('{"this": "is", "a": "test"}', is_json=True)
@@ -50,6 +52,7 @@ class MessageProtocol:
 
     def decrypt(self, data: str, ignore_invalid_signature: bool = False) -> object:
         """Takes an encrypted message (must be encrypted by an official Jarvis `Communication.encrypt()` message)
+        TODO: add documentation
         """
         data = json.loads(data)
         m = b64d(data["m"])

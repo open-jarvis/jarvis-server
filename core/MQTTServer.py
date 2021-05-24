@@ -5,28 +5,36 @@ Copyright (c) 2021 Philipp Scheer
 
 import json
 import traceback
-from jarvis import MQTT, Exiter, Logger
-from classes.API import API
+from jarvis import MQTT, Exiter, Logger, Protocol, API
+from core.Permissions import PUBLIC_KEY, PRIVATE_KEY, CLIENT_KEYS
 
 
 logger = Logger("API")
-mqtt = MQTT(client_id="MQTT Server")
+mqtt = MQTT(userdata="server")
 
 
 def on_message(c, ud, msg):
-    """
-    This function gets called whenever the MQTT server receives a message  
-    It only listens to the `jarvis/#` topic and tries to find an appropriate endpoint in the API class
-    """
+    """This function gets called whenever the MQTT server receives a message  
+    It only listens to the `jarvis/#` topic and tries to find an appropriate endpoint in the API class.  
+    The client has to provide its ID via the userdata parameter. Requests without userdata parameter are discarded"""
     global logger, mqtt
 
+    print(c)
+    print(ud)
+
     try:
-        data = json.loads(msg.payload.decode())
-        res = json.dumps(API.execute(msg.topic))
+        proto = Protocol(PRIVATE_KEY, PUBLIC_KEY, CLIENT_KEYS.get(ud, None), auto_rotate=True)
+        data  = proto.decrypt( msg.payload.decode(), return_raw = True )
+        res   = API.execute(msg.topic, data["data"])
         logger.s("Server", f"Successfully ran endpoint '{msg.topic}' and got response '{res}'")
 
+        res = {
+            "success": res[0],
+            "response": res[1]
+        }
+
         if "reply-to" in data:
-            mqtt.publish(data["reply-to"], res)
+            mqtt.publish(data["reply-to"], proto.encrypt(res, is_json=True))
         else:
             logger.w("Server", f"No 'reply-to' channel specified for topic '{msg.topic}'")
     except Exception as e:
@@ -34,13 +42,11 @@ def on_message(c, ud, msg):
 
 
 def start_server():
-    """
-    Start the MQTT API server.  
-    Create a logging instance and an MQTT server, where we start the main loop
-    """
+    """Start the MQTT API server.  
+    Create a logging instance and an MQTT server, where we start the main loop"""
     global logger, mqtt
     logger.i("Start", "Starting MQTT API server")
     mqtt.on_message(on_message)
-    mqtt.subscribe("jarvis/api/#")
+    mqtt.subscribe("jarvis/#")
     Exiter.mainloop()
     logger.i("Exit", "Shutting down MQTT API server")

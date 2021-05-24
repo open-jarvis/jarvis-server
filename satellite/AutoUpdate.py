@@ -11,8 +11,7 @@ import requests
 import traceback
 from packaging import version
 from dateutil.parser import parse as parsedate
-from jarvis import Logger, Config, Exiter, ThreadPool
-from classes.API import API
+from jarvis import Logger, Config, Exiter, ThreadPool, API
 
 
 logger = Logger("Update")

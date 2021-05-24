@@ -6,9 +6,7 @@
 import time
 import json
 import traceback
-from jarvis import Database, Logger
-from jarvis.Exiter import Exiter
-from classes.API import API
+from jarvis import Exiter, Database, Logger, API
 import snips_nlu
 
 

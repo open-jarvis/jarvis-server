@@ -19,12 +19,11 @@ Checks.check_system()
 
 import os
 import traceback
-from jarvis import Logger, Exiter, ThreadPool
+from jarvis import Logger, Exiter, ThreadPool, API
 import core.MQTTServer as MQTTServer
 import satellite.DatabaseAnalytics as DatabaseAnalytics
 import satellite.NLU as NLU
 import satellite.AutoUpdate as AutoUpdate
-from classes.API import API
 
 
 CURRENT_FILE = os.path.abspath(sys.argv[0])

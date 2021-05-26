@@ -31,5 +31,12 @@ CLIENT_KEYS = cnf.get("client-keys", {})
 
 
 @API.route("jarvis/server/get/public-key")
-def get_public_key(d):
+def get_public_key(args, d):
     return PUBLIC_KEY
+
+@API.route("jarvis/client/+/set/public-key")
+def set_public_key(args, d):
+    pub_key = d["public-key"]
+    client_id = args[0]
+    print(f"setting public key of {client_id} to {pub_key}")
+    return {"success": False}

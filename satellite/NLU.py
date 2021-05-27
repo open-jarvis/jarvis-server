@@ -141,7 +141,7 @@ def train_nlu_model(data):
 
 
 @API.route("jarvis/nlu/train")
-def train_nlu(data=None):
+def train_nlu(args, client, data):
     """
     Train NLU  
     If it receives a valid message, train the NLU engine and save both the trained model and training data into the database
@@ -164,7 +164,7 @@ def train_nlu(data=None):
 
 
 @API.route("jarvis/nlu/parse")
-def parse_nlu(data=None):
+def parse_nlu(args, client, data):
     """
     Parse a sentence  
     The sentence will be parsed by the trained NLU.  
@@ -177,7 +177,7 @@ def parse_nlu(data=None):
 
 
 @API.route("jarvis/nlu/status")
-def nlu_status():
+def nlu_status(args, client, data):
     """
     Starts a status server
     Returns an object: {    trained: True|False, 

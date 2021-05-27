@@ -41,7 +41,7 @@ tpool.register(NLU.start_server, "nlu")
 
 
 @API.route("jarvis/status")
-def jarvis_status():
+def jarvis_status(args, client, data):
     global tpool
     result = {}
     for t in tpool.threads:
@@ -49,7 +49,7 @@ def jarvis_status():
     return result
 
 @API.route("jarvis/restart")
-def jarvis_restart():
+def jarvis_restart(args, client, data):
     global logger, CURRENT_FILE
     logger.i("Restart", "Restarting due to MQTT restart signal")
     try: 

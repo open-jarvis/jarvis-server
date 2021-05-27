@@ -231,7 +231,7 @@ def update_checker():
 
 
 @API.route("jarvis/update/poll")
-def poll_for_updates(data=None):
+def poll_for_updates(args, client, data):
     """
     Manually poll for new updates  
     Checks the update server and compare the remote to the local version  
@@ -268,7 +268,7 @@ def poll_for_updates(data=None):
 
 
 @API.route("jarvis/update/download")
-def download_update(data=None):
+def download_update(args, client, data):
     """
     Download an update  
     Make sure to call `jarvis/update/poll` before downloading  
@@ -290,7 +290,7 @@ def download_update(data=None):
 
 
 @API.route("jarvis/update/install")
-def install_update(data=None):
+def install_update(args, client, data):
     """
     Install an update  
     Make sure to call `jarvis/update/poll` and `jarvis/update/download` before installing  
@@ -312,7 +312,7 @@ def install_update(data=None):
 
 
 @API.route("jarvis/update/status")
-def update_status(data=None):
+def update_status(args, client, data):
     """
     Gets the current update status
     Returns:

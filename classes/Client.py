@@ -40,7 +40,6 @@ class Client():
             self.data["created-at"] = int(time.time())
         self.check()
 
-
     def save(self):
         """Save the current client object into the database"""
         self.data["modified-at"] = int(time.time())
@@ -50,11 +49,13 @@ class Client():
             del self.data["id"]
         return Database().table("clients").insert(self.data)
 
-
     def check(self):
         """Check if all data entries match the client requirements specified by [Client.REQUIREMENTS](Client#REQUIREMENTS), if not throw an Exception"""
         assert all([k in self.data and isinstance(self.data[k],v) for k,v in Client.REQUIREMENTS.items()]), "Make sure all the required fields are present (and have the right data type): " + ", ".join(Device.REQUIREMENTS.keys())
 
+    def get(self, key: str, or_else: any):
+        """Get an element from the data object"""
+        return self.data.get(key, or_else)
 
     @staticmethod
     def load(id):

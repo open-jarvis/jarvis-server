@@ -10,9 +10,6 @@ from core.Permissions import PRIVATE_KEY, PUBLIC_KEY, CLIENT_KEYS
 from classes.Client import Client
 
 
-ALLOW_UNENCRYPTED = [ "jarvis/client/+/set/public-key" ]
-
-
 logger = Logger("API")
 mqtt   = MQTT("server", PRIVATE_KEY, PUBLIC_KEY, None)
 
@@ -22,12 +19,16 @@ def on_message(topic: str, data: any, client_id: str):
     It only listens to the `jarvis/#` topic and tries to find an appropriate endpoint in the API class"""
     global logger, mqtt
 
-    if client_id is None:
+    client = None
+    try:
+        client = Client.load(client_id)
+    except Exception:
         res = json.dumps({ "success": False })
         mqtt.update_public_key(None)
         mqtt.publish(data["reply-to"], res)
         return
 
+    data = json.loads(data)
     rpub = client.get("public-key", None)
 
     try:

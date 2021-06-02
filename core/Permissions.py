@@ -25,7 +25,6 @@ if keys is None:
     logger.e("Keys", "Failed to generate keys and store into database", "")
 
 
-
 PUBLIC_KEY  = keys["public"]
 PRIVATE_KEY = keys["private"]
 
@@ -37,16 +36,18 @@ def get_public_key(args, client, data):
     return PUBLIC_KEY
 
 @API.route("jarvis/client/+/set/public-key")
-def set_public_key(args, client, data):
+def set_public_key(args, client: Client, data):
     global logger
     pub_key = data["public-key"]
-    client_id = args[0]
-    client = Client.load(client_id)
-    if client.get("public-key", None) is None: # first time setting public-key
-        client.set("public-key", pub_key)
-        client.save()
-        logger.i("PublicKey", f"Received public key from {client_id}")
+    current_pub = client.get("public-key", None)
+    # This function is dangerous because rogue clients could set the public key of real client and hijack him
+    # We can prevent that by either only allowing one change (the initial set) of the public key (which is not a great idea because 
+    # the client must stick to his initial private key and cannot upgrade the key size)
+    # Another method would be to check the signature of the client, so that the rogue client also has to know the real private key (which is almost impossible)
+    
+    if current_pub is not None and current_pub.replace("\n", "") == pub_key.replace("\n", ""): # sent the original key (maybe on reconnect)
         return True
-    if client.get("public-key").replace("\n", "") == pub_key.replace("\n", ""):
-        return True
-    return False
+    client.set("public-key", pub_key)
+    client.save()
+    return True
+    return False # trying to modify client public key

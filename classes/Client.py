@@ -3,6 +3,7 @@ Copyright (c) 2021 Philipp Scheer
 """
 
 
+import copy
 import time
 from jarvis import Database
 
@@ -38,7 +39,13 @@ class Client():
             self.data["_id"] = self._id
             self.data["_rev"] = self._rev
             del self.data["id"]
-        return Database().table("clients").insert(self.data)
+        res = Database().table("clients").insert(self.data)
+        # after .insert(), `self.data` will have fields '_id' and '_rev'
+        self._id = self.data["_id"]
+        self._rev = self.data["_rev"]
+        del self.data["_id"]
+        del self.data["_rev"]
+        return res
 
     def get(self, key: str, or_else: any = None):
         """Get an element from the class data object"""
@@ -60,10 +67,14 @@ class Client():
         """Set a specific key of the client data object"""
         self.data["data"][key] = value
 
+    def reload(self):
+        cl = Client.load(self.id)
+        self.data = copy.deepcopy(cl.data)
+        del cl
 
     @property
     def id(self):
-        return self.get("_id")
+        return self._id
 
     @staticmethod
     def load(id):

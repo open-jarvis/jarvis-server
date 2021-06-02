@@ -29,7 +29,6 @@ def on_message(topic: str, data: any, client_id: str):
         return
 
     data = json.loads(data)
-    rpub = client.get("public-key", None)
 
     try:
         res = API.execute(topic, client, data)
@@ -38,6 +37,8 @@ def on_message(topic: str, data: any, client_id: str):
     except Exception as e:
         logger.e("Server", f"Unknown exception occured in endpoint '{topic}'", traceback.format_exc())
 
+    client.reload()
+    rpub = client.get("public-key", None)
     mqtt.update_public_key(rpub)
     mqtt.publish(data["reply-to"], res) \
         if "reply-to" in data else \

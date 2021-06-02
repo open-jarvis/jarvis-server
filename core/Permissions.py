@@ -4,11 +4,12 @@ Copyright (c) 2021 Philipp Scheer
 
 
 import json
-from jarvis import Crypto, Config, Logger, API
+from jarvis import Crypto, Config, Logger, MQTT, API
 from classes.Client import Client
 
 
 KEYLEN = 4096 # https://danielpocock.com/rsa-key-sizes-2048-or-4096-bits/
+SERVER_ID = "server"
 
 
 cnf = Config()
@@ -25,10 +26,13 @@ if keys is None:
     logger.e("Keys", "Failed to generate keys and store into database", "")
 
 
+client = Client({**Client.DEFAULTS, **{"id": SERVER_ID, "public-key": keys["public"]}})
+client.save()
+
 PUBLIC_KEY  = keys["public"]
 PRIVATE_KEY = keys["private"]
 
-CLIENT_KEYS = cnf.get("client-keys", {})
+MQTT_SERVER = MQTT(SERVER_ID, PRIVATE_KEY, PUBLIC_KEY, PUBLIC_KEY)
 
 
 @API.route("jarvis/server/get/public-key")

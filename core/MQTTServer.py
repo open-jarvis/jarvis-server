@@ -5,8 +5,8 @@ Copyright (c) 2021 Philipp Scheer
 
 import json
 import traceback
-from jarvis import MQTT, Exiter, Logger, Protocol, API
-from core.Permissions import PRIVATE_KEY, PUBLIC_KEY, CLIENT_KEYS
+from jarvis import MQTT, Exiter, Logger, API
+from core.Permissions import PRIVATE_KEY, PUBLIC_KEY
 from classes.Client import Client
 
 

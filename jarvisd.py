@@ -21,9 +21,9 @@ import os
 import traceback
 from jarvis import Logger, Exiter, ThreadPool, API
 import core.MQTTServer as MQTTServer
-import satellite.DatabaseAnalytics as DatabaseAnalytics
 import satellite.NLU as NLU
 import satellite.AutoUpdate as AutoUpdate
+import satellite.DatabaseAnalytics as DatabaseAnalytics
 
 
 CURRENT_FILE = os.path.abspath(sys.argv[0])
@@ -51,6 +51,8 @@ def jarvis_status(args, client, data):
 @API.route("jarvis/restart")
 def jarvis_restart(args, client, data):
     global logger, CURRENT_FILE
+    if client.id != "server":
+        return False
     logger.i("Restart", "Restarting due to MQTT restart signal")
     try: 
         os.execv(sys.executable, ["python3", CURRENT_FILE, "--upgraded"])

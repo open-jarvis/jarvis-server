@@ -38,19 +38,14 @@ SUFFIX           = "-latest.tar.gz"
 
 
 def install_downloaded_archive(downloaded_archive, local_installation_path):
-    """
-    Unpack the downloaded archive from `downloaded_archive` path -> `local_installation_path`  
-    Removes existing data in `downloaded_archive`
-    """
+    """Unpack the downloaded archive from `downloaded_archive` path -> `local_installation_path`  
+    Removes existing data in `downloaded_archive`"""
     shutil.rmtree(local_installation_path, ignore_errors=True)
     shutil.unpack_archive(downloaded_archive, local_installation_path)
     os.unlink(downloaded_archive)
 
-
 def download(url, path):
-    """
-    Download `url` and store to `path`
-    """
+    """Download `url` and store to `path`"""
     global download_progress
     download_progress = 0
     with open(path, "wb") as f:
@@ -70,36 +65,27 @@ def download(url, path):
     download_progress = 1
     return size
 
-
 def calculate_update_size():
-    """
-    Calculate the total size of all repositories
-    """
+    """Calculate the total size of all repositories"""
     global UPDATE_REPOS, PROTOCOL
     total_size = 0
     for repo in UPDATE_REPOS:
         total_size += int(requests.head(f"{PROTOCOL}://{SERVER}/{repo}{SUFFIX}").headers["content-length"])
     return total_size
 
-
 def fetch_versions(version_url, version_local):
-    """
-    Get local and remote versions  
+    """Get local and remote versions  
     * `version_url` - The URL to a file containing a version string like `v0.0.1`, `v2.15.3`, etc.  
-    * `version_local` - File path to a file containing a version string
-    """
+    * `version_local` - File path to a file containing a version string"""
     remote_version = requests.get(version_url).text.strip()
     with open(version_local, "r") as f:
         local_version = f.read().strip()
     return (version.parse(remote_version), version.parse(local_version))
 
-
 def get_update_notes(remote_url, local_url):
-    """
-    Get the remote and local update notes  
+    """Get the remote and local update notes  
     * `remote_url` - URL of a markdown file containing update notes  
-    * `local_url` - File path of a markdown file containing the current update notes
-    """
+    * `local_url` - File path of a markdown file containing the current update notes"""
     rsp  = requests.get(remote_url)
     stmp = int(time.mktime(parsedate(rsp.headers["last-modified"]).timetuple()))
     rmt  = rsp.text.strip()
@@ -107,13 +93,10 @@ def get_update_notes(remote_url, local_url):
         lcl = f.read().strip()
     return (rmt, lcl, stmp)
 
-
 def poll(download=False, install=False):
-    """
-    Poll for updates  
+    """Poll for updates  
     * If [`download`]() is set, automatically download the file. Overrides the config setting  
-    * If `install` is set, automatically install the update. Overrides the config setting
-    """
+    * If `install` is set, automatically install the update. Overrides the config setting"""
     global CURRENT_ACTION, UPDATE_REPOS, SERVER, VERSION_NAMES, logger, mqtt, cnf, download_progress, download_pending, installation_pending
     logger.i("Poll", f"Polling for updates from server {SERVER}")
     at_least_one_update = False
@@ -187,11 +170,8 @@ def poll(download=False, install=False):
     if not at_least_one_update:
         logger.i("Poll", f"No update found on server {SERVER}")
 
-
 def schedule_loop():
-    """
-    In a loop, check if the scheduled install timestamp has passed and if so, install the update
-    """
+    """In a loop, check if the scheduled install timestamp has passed and if so, install the update"""
     global logger
     while Exiter.running:
         schedule = cnf.get("schedule-install", False)
@@ -202,11 +182,8 @@ def schedule_loop():
                 poll(False, True)
         time.sleep(1)
 
-
 def update_checker():
-    """
-    Starts the mainloop (`schedule_loop` and poll loop)
-    """
+    """Starts the mainloop (`schedule_loop` and poll loop)"""
     global mqtt, logger, tpool, POLL_INTERVAL, DOWNLOADS_FOLDER
 
     try:
@@ -232,8 +209,7 @@ def update_checker():
 
 @API.route("jarvis/update/poll")
 def poll_for_updates(args, client, data):
-    """
-    Manually poll for new updates  
+    """Manually poll for new updates  
     Checks the update server and compare the remote to the local version  
     If an update is available, retrieve the update notes  
     Returns update information:
@@ -259,18 +235,15 @@ def poll_for_updates(args, client, data):
                 }
             }|{}
     }
-    ```
-    """
+    ```"""
     global logger
     logger.i("Poll", "Received MQTT poll signal")
     poll()
     return {"success": True, "update": cnf.get("version", {})}
 
-
 @API.route("jarvis/update/download")
 def download_update(args, client, data):
-    """
-    Download an update  
+    """Download an update  
     Make sure to call `jarvis/update/poll` before downloading  
     Returns:
     ```python
@@ -278,8 +251,7 @@ def download_update(args, client, data):
         "success": true|false,
         "error?": ...
     }
-    ```
-    """
+    ```"""
     global logger, download_pending
     logger.i("Download", "Received MQTT download signal")
     if not download_pending:
@@ -288,11 +260,9 @@ def download_update(args, client, data):
         tpool.register(poll, f"download update {int(time.time())}", [True, False])
         return True
 
-
 @API.route("jarvis/update/install")
 def install_update(args, client, data):
-    """
-    Install an update  
+    """Install an update  
     Make sure to call `jarvis/update/poll` and `jarvis/update/download` before installing  
     Returns:
     ```python
@@ -300,8 +270,7 @@ def install_update(args, client, data):
         "success": true|false,
         "error?": ...
     }
-    ```
-    """
+    ```"""
     global logger, installation_pending
     logger.i("Install", "Received MQTT install signal")
     if not installation_pending:
@@ -310,11 +279,9 @@ def install_update(args, client, data):
         tpool.register(poll, f"install update {int(time.time())}", [False, True])
         return True
 
-
 @API.route("jarvis/update/status")
 def update_status(args, client, data):
-    """
-    Gets the current update status
+    """Gets the current update status
     Returns:
     ```python
     {
@@ -329,8 +296,7 @@ def update_status(args, client, data):
             "download": float # float percentage of progress 0-1
         }
     }
-    ```
-    """
+    ```"""
     global CURRENT_ACTION, download_pending, installation_pending
     logger.i("Install", "Received MQTT status signal")
     result = cnf.get("version", {})  # benchmark: 0.17 - 0.2s

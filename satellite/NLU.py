@@ -1,6 +1,6 @@
-#
-# Copyright (c) 2020 by Philipp Scheer. All Rights Reserved.
-#
+"""
+Copyright (c) 2021 Philipp Scheer
+"""
 
 
 import time
@@ -34,12 +34,10 @@ STATISTICS = {
 
 
 def start_server():
-    """
-    Starts the NLU server.
+    """Starts the NLU server.
     This function also starts the training server which waits for new data to train the model
     The server first tries to fetch existing assistant data, if no data is stored in the database, 
-        the script will wait for trained data to be written into the database and it'll fetch from there
-    """
+        the script will wait for trained data to be written into the database and it'll fetch from there"""
     global logger
     # try to get data from database
     assistant_data = get_assistant_data()
@@ -51,13 +49,10 @@ def start_server():
     logger.i("Shutdown", "Shutting down NLU Servers")
     return
 
-
 def get_assistant_data():
-    """
-    Try to retrieve the already fitted NLU data
+    """Try to retrieve the already fitted NLU data
     If fitted data could be found, return it, else None  
-    This starts an infinite loop which retries to get the data until it has been found or Jarvis stops
-    """
+    This starts an infinite loop which retries to get the data until it has been found or Jarvis stops"""
     def _get_assistant_data():
         res = Database().table("assistant").filter(lambda x: "nlu-data" in x)
         if res.found:
@@ -69,10 +64,8 @@ def get_assistant_data():
         assistant_data = _get_assistant_data()
     return assistant_data
 
-
 def save_assistant_data(data):
-    """
-    Save NLU data to the database  
+    """Save NLU data to the database  
     Use [get_assistant_data](#get_assistant_data) to retrieve the stored data  
     `nlu-data` format:
     ```python
@@ -81,8 +74,7 @@ def save_assistant_data(data):
         "modified-at": "<unix timestamp>",
         "nlu-data": ... up to 256Mb data size (MQTT spec limits) ...
     }
-    ```
-    """
+    ```"""
     assistant_table = Database().table("assistant")
     res = assistant_table.filter(lambda x: "nlu-data" in x)
     if res.found:
@@ -91,13 +83,10 @@ def save_assistant_data(data):
         data["created-at"] = int(time.time())
         assistant_table.insert(data)
 
-
 def parse_nlu_model(utterance):
-    """
-    Let the NLU engine parse the given string utterance (should be a sentence)  
+    """Let the NLU engine parse the given string utterance (should be a sentence)  
     Throws an exception if the model is not fitted, currently training or another unknown error occurs.  
-    Otherwise, returns the result
-    """
+    Otherwise, returns the result"""
     global nlu_engine, logger, STATISTICS
     try:
         if not STATISTICS["trained"]:
@@ -117,11 +106,8 @@ def parse_nlu_model(utterance):
         logger.e("Parse", "Failed to parse utterance on NLU model", traceback.format_exc())
         raise e
 
-
 def train_nlu_model(data):
-    """
-    Train the NLU model with given `data`
-    """
+    """Train the NLU model with given `data`"""
     global nlu_engine, logger, STATISTICS
     STATISTICS["training"] = True
     logger.i("Training", f"Starting NLU model training")
@@ -139,13 +125,10 @@ def train_nlu_model(data):
     STATISTICS["avg-time"]["training"] = STATISTICS["total-time"]["training"] / STATISTICS["count"]["training"]
 
 
-
 @API.route("jarvis/nlu/train")
 def train_nlu(args, client, data):
-    """
-    Train NLU  
-    If it receives a valid message, train the NLU engine and save both the trained model and training data into the database
-    """
+    """Train NLU  
+    If it receives a valid message, train the NLU engine and save both the trained model and training data into the database"""
     global logger
     try:
         # train the nlu instance
@@ -162,24 +145,19 @@ def train_nlu(args, client, data):
         logger.e("train", f"failed to train data '{json.dumps(nlu_data)}'", traceback.format_exc())
         return False
 
-
 @API.route("jarvis/nlu/parse")
 def parse_nlu(args, client, data):
-    """
-    Parse a sentence  
+    """Parse a sentence  
     The sentence will be parsed by the trained NLU.  
-    If the NLU is not trained yet, throw an exception
-    """
+    If the NLU is not trained yet, throw an exception"""
     global logger
     if "utterance" not in data:
         return {"success": False, "error": "No utterance provided!"}
     return parse_nlu_model(data["utterance"])
 
-
 @API.route("jarvis/nlu/status")
 def nlu_status(args, client, data):
-    """
-    Starts a status server
+    """Starts a status server
     Returns an object: {    trained: True|False, 
                             training: True|False,
                             avg-time: { 
@@ -194,7 +172,5 @@ def nlu_status(args, client, data):
                                 training: int, 
                                 parsing: int 
                             } 
-                        }
-    """
+                        }"""
     return STATISTICS
-

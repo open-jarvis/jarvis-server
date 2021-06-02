@@ -1,6 +1,7 @@
-#
-# Copyright (c) 2020 by Philipp Scheer. All Rights Reserved.
-#
+"""
+Copyright (c) 2021 Philipp Scheer
+"""
+
 
 import time
 import traceback

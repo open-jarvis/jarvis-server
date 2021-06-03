@@ -297,7 +297,7 @@ def update_status(args, client, data):
         }
     }
     ```"""
-    global CURRENT_ACTION, download_pending, installation_pending
+    global CURRENT_ACTION, download_pending, installation_pending, download_progress
     logger.i("Install", "Received MQTT status signal")
     result = cnf.get("version", {})  # benchmark: 0.17 - 0.2s
     result["success"] = True
@@ -311,4 +311,5 @@ def update_status(args, client, data):
     if download_pending:
         download_progress = 0
     result["progress"] = { "download": download_progress }
+    # takes abt. 1.5s
     return result

@@ -3,15 +3,16 @@ Copyright (c) 2021 Philipp Scheer
 """
 
 
+import time
 import json
 import traceback
 from jarvis import MQTT, Exiter, Logger, API
-from core.Permissions import PRIVATE_KEY, PUBLIC_KEY
+from core.Permissions import PRIVATE_KEY, PUBLIC_KEY, MQTT_SERVER
 from classes.Client import Client
 
 
 logger = Logger("API")
-mqtt   = MQTT("server", PRIVATE_KEY, PUBLIC_KEY, None)
+mqtt   = MQTT_SERVER
 
 
 def on_message(topic: str, data: any, client_id: str):
@@ -32,7 +33,7 @@ def on_message(topic: str, data: any, client_id: str):
 
     try:
         res = API.execute(topic, client, data)
-        logger.s("Server", f"Successfully ran endpoint '{topic}' and got response '{res}'")
+        # logger.s("Server", f"Successfully ran endpoint '{topic}' and got response '{res}'")
         res = { "success": res[0], "result": res[1] }
     except Exception as e:
         logger.e("Server", f"Unknown exception occured in endpoint '{topic}'", traceback.format_exc())
@@ -40,9 +41,12 @@ def on_message(topic: str, data: any, client_id: str):
     client.reload()
     rpub = client.get("public-key", None)
     mqtt.update_public_key(rpub)
+
     mqtt.publish(data["reply-to"], res) \
         if "reply-to" in data else \
             logger.w("Server", f"No 'reply-to' channel specified for topic '{topic}'")
+
+    # mqtt.publish takes ~4s, encryption?
 
 
 def start_server():

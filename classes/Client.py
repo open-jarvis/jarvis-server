@@ -5,7 +5,10 @@ Copyright (c) 2021 Philipp Scheer
 
 import copy
 import time
-from jarvis import Database
+from jarvis import Database, Logger
+
+
+logger = Logger("Client")
 
 
 class Client():
@@ -16,6 +19,9 @@ class Client():
     DEFAULTS = {
         "ip": "127.0.0.1",
         "data": {},
+        "name": "Anonymous",
+        "platform": "mobile", # mobile | desktop | web | device
+        "type": "device", # device | mic
         "secure": True,
         "public-key": None,
         "last-seen": None,
@@ -77,16 +83,22 @@ class Client():
         return self._id
 
     @staticmethod
+    def exists(id):
+        """Check if a client with `id` exists"""
+        res = Database().table("clients").get(id)
+        return res is not None
+
+    @staticmethod
     def load(id):
         """Load a client from the database given its id"""
-        res = Database().table("clients").find({ "_id": { "$eq": id } })
-        if res.found:
-            res[0]["id"] = res[0]["_id"]
-            _id = res[0]["_id"]
-            _rev = res[0]["_rev"]
-            del res[0]["_id"]
-            del res[0]["_rev"]
-            c = Client(res[0])
+        res = Database().table("clients").get(id)
+        if res:
+            res["id"] = res["_id"]
+            _id = res["_id"]
+            _rev = res["_rev"]
+            del res["_id"]
+            del res["_rev"]
+            c = Client(res)
             c._id = _id
             c._rev = _rev
             return c

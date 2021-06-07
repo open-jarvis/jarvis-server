@@ -44,6 +44,9 @@ class Client():
             self.data["_id"] = self._id
             self.data["_rev"] = self._rev
             del self.data["id"]
+
+        self.data["secure"] = self.data["public-key"] is not None
+
         res = Database().table("clients").insert(self.data)
         # after .insert(), `self.data` will have fields '_id' and '_rev'
         self._id = self.data["_id"]

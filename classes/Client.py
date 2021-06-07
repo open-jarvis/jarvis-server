@@ -20,8 +20,7 @@ class Client():
         "ip": "127.0.0.1",
         "data": {},
         "name": "Anonymous",
-        "platform": "mobile", # mobile | desktop | web | device
-        "type": "device", # device | mic
+        "device": None, # mic, phone, computer == laptop, jarvis
         "secure": True,
         "public-key": None,
         "last-seen": None,
@@ -34,9 +33,9 @@ class Client():
         """Initialize a new client with an object from the database"""
         self.data = client_object
         if "created-at" not in self.data or self.data["created-at"] is None:
-            self.data["created-at"] = int(time.time())
+            self.data["created-at"]  = int(time.time())
             self.data["modified-at"] = int(time.time())
-            self.data["last-seen"] = -1
+            self.data["last-seen"]   = int(time.time())
 
     def save(self):
         """Save the current client object into the database"""

@@ -28,7 +28,11 @@ if keys is None:
 
 if not Client.exists(SERVER_ID):
     logger.i("Server", "No internal MQTT client exists, creating")
-    client = Client.new({"public-key": keys["public"]})
+    client = Client.new({
+        "name": "Jarvis Server", 
+        "device": "jarvis", 
+        "public-key": keys["public"]
+    })
     client.data["_id"] = SERVER_ID
     client.save()
 

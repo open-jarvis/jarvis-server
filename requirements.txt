@@ -4,3 +4,9 @@ cryptography
 open-jarvis
 paho.mqtt
 couchdb2
+python_dateutil
+packaging
+requests
+snips_nlu
+deprecation
+future

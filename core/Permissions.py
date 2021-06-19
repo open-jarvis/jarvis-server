@@ -31,7 +31,8 @@ if not Client.exists(SERVER_ID):
     client = Client.new({
         "name": "Jarvis Server", 
         "device": "jarvis", 
-        "public-key": keys["public"]
+        "public-key": keys["public"],
+        "activated": True
     })
     client.data["_id"] = SERVER_ID
     client.save()

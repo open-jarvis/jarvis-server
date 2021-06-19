@@ -25,7 +25,8 @@ class Client():
         "public-key": None,
         "last-seen": None,
         "created-at": None,
-        "modified-at": None
+        "modified-at": None,
+        "activated": False
     }
     """Default values when creating a new client"""
 

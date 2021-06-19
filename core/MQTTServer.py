@@ -20,6 +20,8 @@ def on_message(topic: str, data: any, client_id: str):
     It only listens to the `jarvis/#` topic and tries to find an appropriate endpoint in the API class"""
     global logger, mqtt
 
+    print("DEBUG", "MQTTSERVER", topic, data, client_id)
+
     client = None
     try:
         client = Client.load(client_id)

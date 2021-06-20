@@ -7,7 +7,7 @@ import time
 import json
 import traceback
 from jarvis import MQTT, Exiter, Logger, API
-from core.Permissions import PRIVATE_KEY, PUBLIC_KEY, MQTT_SERVER
+from core.Permissions import PRIVATE_KEY, PUBLIC_KEY, MQTT_SERVER, UNVERIFIED_ENDPOINTS
 from classes.Client import Client
 
 
@@ -20,29 +20,32 @@ def on_message(topic: str, data: any, client_id: str):
     It only listens to the `jarvis/#` topic and tries to find an appropriate endpoint in the API class"""
     global logger, mqtt
 
-    print("DEBUG", "MQTTSERVER", topic, data, client_id)
+    print("on_message",topic,data,client_id)
 
     client = None
-    try:
-        client = Client.load(client_id)
-    except Exception:
-        res = json.dumps({ "success": False })
-        mqtt.update_public_key(None)
-        mqtt.publish(data["reply-to"], res)
-        return
 
-    data = json.loads(data)
+    if topic not in UNVERIFIED_ENDPOINTS:
+        try:
+            client = Client.load(client_id)
+        except Exception:
+            logger.e("Client", f"Failed to get client '{client_id}'", traceback.format_exc())
+            res = { "success": False }
+            mqtt.update_public_key(None)
+            mqtt.publish(data["reply-to"], res)
+            return
 
     try:
         res = API.execute(topic, client, data)
-        # logger.s("Server", f"Successfully ran endpoint '{topic}' and got response '{res}'")
         res = { "success": res[0], "result": res[1] }
     except Exception as e:
         logger.e("Server", f"Unknown exception occured in endpoint '{topic}'", traceback.format_exc())
 
-    client.reload()
-    rpub = client.get("public-key", None)
-    mqtt.update_public_key(rpub)
+    if client:
+        client.reload()
+        rpub = client.get("public-key", None)
+        mqtt.update_public_key(rpub)
+    else:
+        mqtt.update_public_key(None)
 
     mqtt.publish(data["reply-to"], res) \
         if "reply-to" in data else \

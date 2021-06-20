@@ -10,6 +10,7 @@ from classes.Client import Client
 
 KEYLEN = 2048 # https://danielpocock.com/rsa-key-sizes-2048-or-4096-bits/
 SERVER_ID = "server"
+UNVERIFIED_ENDPOINTS = ["jarvis/server/get/public-key"]
 
 
 cnf = Config()

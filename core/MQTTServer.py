@@ -11,7 +11,7 @@ from core.Permissions import PRIVATE_KEY, PUBLIC_KEY, MQTT_SERVER, UNVERIFIED_EN
 from classes.Client import Client
 
 
-logger = Logger("API")
+logger = Logger("MQTT-API")
 mqtt   = MQTT_SERVER
 
 
@@ -20,18 +20,21 @@ def on_message(topic: str, data: any, client_id: str):
     It only listens to the `jarvis/#` topic and tries to find an appropriate endpoint in the API class"""
     global logger, mqtt
 
-    print("on_message",topic,data,client_id)
-
+    start = time.time()
     client = None
+
+    logger.d("Message", f"{topic} -> {data} : {client_id}")
 
     if topic not in UNVERIFIED_ENDPOINTS:
         try:
             client = Client.load(client_id)
+            client.set("modified-at", int(time.time()))
         except Exception:
             logger.e("Client", f"Failed to get client '{client_id}'", traceback.format_exc())
             res = { "success": False }
             mqtt.update_public_key(None)
             mqtt.publish(data["reply-to"], res)
+            logger.d("Timing", f"Executing MQTT endpoint '{topic}' took {time.time()-start :.2f}s")
             return
 
     try:
@@ -50,6 +53,8 @@ def on_message(topic: str, data: any, client_id: str):
     mqtt.publish(data["reply-to"], res) \
         if "reply-to" in data else \
             logger.w("Server", f"No 'reply-to' channel specified for topic '{topic}'")
+
+    logger.d("Timing", f"Executing MQTT endpoint '{topic}' took {time.time()-start :.2f}s")
 
     # mqtt.publish takes ~4s, encryption?
 

@@ -3,9 +3,21 @@ Copyright (c) 2021 Philipp Scheer
 """
 
 class APIDOC:
-    def jarvis_client_+_set_public-key():
+    def jarvis_client_set():
         """
-`jarvis/client/+/set/public-key`
+`jarvis/client/set`
+
+No documentation available!"""
+
+    def jarvis_client_set_info():
+        """
+`jarvis/client/set/info`
+
+No documentation available!"""
+
+    def jarvis_client_set_public-key():
+        """
+`jarvis/client/set/public-key`
 
 No documentation available!"""
 

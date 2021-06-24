@@ -50,7 +50,7 @@ MQTT_SERVER = MQTT(SERVER_ID, PRIVATE_KEY, PUBLIC_KEY, PUBLIC_KEY)
 def get_public_key(args, client, data):
     return PUBLIC_KEY
 
-@API.route("jarvis/client/+/set/public-key")
+@API.route("jarvis/client/set/public-key")
 def set_public_key(args, client: Client, data):
     global logger
     pub_key = data["public-key"]

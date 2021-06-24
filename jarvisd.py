@@ -60,6 +60,9 @@ def jarvis_restart(args, client, data):
         logger.e("Restart", "Failed to restart Jarvis, see traceback", traceback.format_exc())
 
 
+import core.Routing # import additional routes
+
+
 def main():
     global logger
     logger.i("File", f"Running jarvis file {CURRENT_FILE}")

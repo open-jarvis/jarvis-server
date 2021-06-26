@@ -31,7 +31,7 @@ UPDATE_REPOS     = [ "server", "web" ]
 CURRENT_ACTION   = "idle"
 DOWNLOADS_FOLDER = "/jarvis/downloads"
 POLL_INTERVAL    = 60 * 60 * 1 # CHECK EVERY HOUR FOR UPDATE
-SERVER           = cnf.get("update-server", "jarvisdata.philippscheer.com")
+SERVER           = cnf.get("update-server", "jarvis.fipsi.at")
 ROOT_DIR         = cnf.get("directories", {"root": "/jarvis"})["root"]
 PROTOCOL         = "https"
 SUFFIX           = "-latest.tar.gz"
@@ -98,6 +98,9 @@ def poll(download=False, install=False):
     * If [`download`]() is set, automatically download the file. Overrides the config setting  
     * If `install` is set, automatically install the update. Overrides the config setting"""
     global CURRENT_ACTION, UPDATE_REPOS, SERVER, VERSION_NAMES, logger, mqtt, cnf, download_progress, download_pending, installation_pending
+    # TODO: install a jarvis repo on my server
+    logger.d("Poll", "Skipping poll")
+    return
     logger.i("Poll", f"Polling for updates from server {SERVER}")
     at_least_one_update = False
     do_restart = False
@@ -166,6 +169,7 @@ def poll(download=False, install=False):
 
             CURRENT_ACTION = "idle"
     if do_restart:
+        # TODO: fix this variable
         mqtt.publish("jarvis/backend/restart", "{}")
     if not at_least_one_update:
         logger.i("Poll", f"No update found on server {SERVER}")

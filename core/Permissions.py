@@ -33,7 +33,8 @@ if not Client.exists(SERVER_ID):
         "name": "Jarvis Server", 
         "device": "jarvis", 
         "public-key": keys["public"],
-        "activated": True
+        "activated": True,
+        "is-root": True
     })
     client.data["_id"] = SERVER_ID
     client.save()

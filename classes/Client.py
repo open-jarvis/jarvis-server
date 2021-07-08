@@ -48,7 +48,7 @@ class Client():
 
         self.data["secure"] = self.data["public-key"] is not None
 
-        res = Database().table("clients").insert(self.data)
+        res = Database().table("devices").insert(self.data)
         # after .insert(), `self.data` will have fields '_id' and '_rev'
         self._id = self.data["_id"]
         self._rev = self.data["_rev"]
@@ -88,13 +88,13 @@ class Client():
     @staticmethod
     def exists(id):
         """Check if a client with `id` exists"""
-        res = Database().table("clients").get(id)
+        res = Database().table("devices").get(id)
         return res is not None
 
     @staticmethod
     def load(id):
         """Load a client from the database given its id"""
-        res = Database().table("clients").get(id)
+        res = Database().table("devices").get(id)
         if res:
             res["id"] = res["_id"]
             _id = res["_id"]

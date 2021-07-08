@@ -19,7 +19,7 @@ print(f"Getting keys: {(time.time() - start)/ITERATIONS :.2f}s")
 
 start = time.time()
 for i in range(ITERATIONS):
-        Database().table("clients").find({ "_id": { "$eq": "server" } })
+        Database().table("devices").find({ "_id": { "$eq": "server" } })
 print(f"Find operation: {(time.time() - start)/ITERATIONS :.2f}s")
 
 

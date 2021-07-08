@@ -9,12 +9,12 @@ print(f"{ITERATIONS} iterations")
 
 start = time.time()
 for i in range(ITERATIONS):
-    Database().table("clients").find({ "_id": { "$eq": DOC_ID } })
+    Database().table("devices").find({ "_id": { "$eq": DOC_ID } })
 print(f"Find operation: {(time.time() - start)/ITERATIONS :.2f}s")
 
 start = time.time()
 for i in range(ITERATIONS):
-    Database().table("clients").get(DOC_ID)
+    Database().table("devices").get(DOC_ID)
 print(f"Get operation: {(time.time() - start)/ITERATIONS :.2f}s")
 
 

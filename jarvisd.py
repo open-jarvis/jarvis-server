@@ -23,7 +23,7 @@ from jarvis import Logger, Exiter, ThreadPool, API
 import core.MQTTServer as MQTTServer
 import satellite.NLU as NLU
 import satellite.AutoUpdate as AutoUpdate
-import satellite.DatabaseAnalytics as DatabaseAnalytics
+import satellite.Analytics as Analytics
 
 
 CURRENT_FILE = os.path.abspath(sys.argv[0])
@@ -35,7 +35,7 @@ logger.console_on()
 
 tpool = ThreadPool(logger)
 tpool.register(MQTTServer.start_server, "mqtt")
-tpool.register(DatabaseAnalytics.start_analysis, "analytics")
+tpool.register(Analytics.start, "analytics")
 tpool.register(AutoUpdate.update_checker, "update")
 tpool.register(NLU.start_server, "nlu")
 

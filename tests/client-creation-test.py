@@ -8,7 +8,7 @@ kill -9 `jobs -p` ; PYTHONPATH=. python3 tests/client-creation-test.py
 from jarvis import Colors, Client, Database, Crypto
 from classes import Client as backendClient
 
-Database().table("clients").drop()
+Database().table("devices").drop()
 
 
 # THIS HAPPENS ON THE SERVER
